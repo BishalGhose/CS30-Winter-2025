@@ -42,7 +42,6 @@ function draw() {
       x = 0;
     }
   }
-  
 }
 
 function mousePressed(){
