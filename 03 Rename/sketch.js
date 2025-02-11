@@ -15,7 +15,7 @@ function draw() {
   drawCharacter();
 }
 
-function drawCharacter(){
+function drawCharacter(){              
   let bodysize = 3;
   let eyesize = 30;
   let width = 100 * bodysize, height = 80 * bodysize;
@@ -26,6 +26,7 @@ function drawCharacter(){
   circle((windowHeight/2) + height/4, (windowWidth/2) - width/2, eyesize);
   circle((windowHeight/2) - height/4, (windowWidth/2) - width/2, eyesize);
   rect((windowHeight/2) - height/4, (windowWidth/2) - width/3, height/2, width/20, 5);
+  rect((windowWidth/2), (windowHeight/2), height/20, width/2, 5);
   rect((windowWidth/2), (windowHeight/2), height/20, width/2, 5);
 }
 
