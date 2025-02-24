@@ -58,12 +58,10 @@ function drawMoon(){
 
   //Draws the specs/craters on the moon
   fill(70);
-  circle(mouseX + 2, mouseY + 48, 50);
-  circle(mouseX - 10, mouseY - 70, 25);
-  circle(mouseX - 50, mouseY - 20, 40);
-  circle(mouseX + 40, mouseY - 30, 55);
-  circle(mouseX - 52, mouseY + 33, 20);
-  circle(mouseX + 55, mouseY + 27, 27);
+  let CoordsAndSizes = [[2,48,50], [-10, -70, 25], [-50, -20, 40], [40, -30,55], [-52, 33, 20], [55, 27, 27]];
+  for (let thing of CoordsAndSizes){
+    circle(mouseX + thing[0], mouseY + thing[1], thing[2]);
+  }
 }
 
 
