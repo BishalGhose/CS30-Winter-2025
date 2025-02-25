@@ -30,15 +30,14 @@ function draw() {
   //Manager for day/night cycle, draws stuff like sun, clouds, stars depending on day/night
   switch(dayCycle){
   case 1:
-    background(0);
+    drawNightGradient(1);
     drawStars(1.5);
     drawMoon();
     drawTerrain(70);
     drawTree();
     break;
   case 2: 
-    background(0,220,255);
-    drawDayGradient();
+    drawDayGradient(1);
     drawSun(); 
     drawTerrain(70);
     drawClouds(12);  
@@ -56,7 +55,7 @@ function drawMoon(){
   circle(mouseX,mouseY,200);
   noStroke();
 
-  //Draws the specs/craters on the moon
+  //Draws the specs/craters on the moon 
   fill(70);
   let CoordsAndSizes = [[2,48,50], [-10, -70, 25], [-50, -20, 40], [40, -30,55], [-52, 33, 20], [55, 27, 27]];
   for (let thing of CoordsAndSizes){
@@ -83,9 +82,26 @@ function drawStars(rate) {
   }
 }
 
-function drawDayGradient(){
-  bezier(0,windowHeight/2, windowWidth/2, windowHeight/2, windowWidth/3, windowHeight/3, windowWidth, windowHeight/2);
+
+
+function drawDayGradient(h){
+ let mappedMouseY = map(mouseY, 0, windowHeight, 0, 255)
+ for (let y = 0; y <= windowHeight; y++){  
+  let mappedBlue = map(y, windowHeight, 0, 0, 255); 
+  fill(-(mappedMouseY/2)+60, mappedBlue-(mappedMouseY/2)+60, 255-(mappedMouseY/2)+60);  
+  rect(0, y, windowWidth, h);   
+ }  
+}  
+
+function drawNightGradient(h){
+  let mappedMouseY = map(mouseY, 0, windowHeight, 0, 255) 
+  for (let y = 0; y <= windowHeight; y++){  
+    let mappedPurple = map(y, windowHeight, 0, 0, 255); 
+    fill(mappedPurple/4, 0, mappedPurple/2);  
+    rect(0, y, windowWidth, h); 
+  }
 }
+
 
 
 //Draws my name in the bottom right corner
@@ -94,9 +110,6 @@ function drawMyName(){
   textFont(nameFont,30);
   text("Bishal", windowWidth/1.1, windowHeight/1.01);
 }
-
-
-
 
 
 //Draws clouds using elipses and a normal distribution to make them more dense near the top
@@ -122,17 +135,15 @@ function drawTree(){
   //Branch Leaves
   fill(getSeasonColor());
   circle(windowWidth/2.8, 13 * windowHeight/18, 130);
-  //Main Leaves
-  fill(getSeasonColor());
-  circle(28 * windowWidth/140, windowHeight/2, 300);
-  fill(getSeasonColor());
-  circle(47 * windowWidth/140, windowHeight/1.85, 200);
-  fill(getSeasonColor());
-  circle(7 * windowWidth/140, windowHeight/1.8, 170);
-  fill(getSeasonColor());
-  circle(28 * windowWidth/140, windowHeight/1.8, 230);
-}
 
+
+  //Main Leaves
+  let listofvalues = [[28,2,300], [47,1.85,200], [7,1.8,170], [28,1.8,230]]
+  for (let x of listofvalues){
+    fill(getSeasonColor())
+    circle(x[0] * windowWidth/140, windowHeight/x[1], x[2]);
+  }
+}
 
 
 //Sets up a switch case based on currentBack to return a shade of the color associated with the season
