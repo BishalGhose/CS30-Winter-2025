@@ -71,8 +71,19 @@ function drawSun(){
   strokeWeight(17);
   circle(mouseX,mouseY,200);
   noStroke();
-}
 
+
+  fill(0);
+  circle(mouseX,mouseY,150); 
+
+  fill(255,255,0);  
+  circle(mouseX,mouseY-10,147);   
+  fill(0);
+  circle(mouseX + 40, mouseY-30, 25);
+  circle(mouseX - 40, mouseY-30, 25); 
+
+} 
+ 
 //Draws stars randomly throughout the screen with a rate variable controlling the density
 function drawStars(rate) {
   for (let stars = 0; stars <= random(28,40) * rate; stars++){
@@ -90,7 +101,7 @@ function drawDayGradient(h){
   let mappedBlue = map(y, windowHeight, 0, 0, 255); 
   fill(-(mappedMouseY/2)+60, mappedBlue-(mappedMouseY/2)+60, 255-(mappedMouseY/2)+60);  
   rect(0, y, windowWidth, h);   
- }  
+ } 
 }  
 
 function drawNightGradient(h){
