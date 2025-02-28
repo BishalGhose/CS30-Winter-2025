@@ -28,7 +28,10 @@ function draw() {
 
   image(pinImages[frameCount], width/2, height/2);
   frameCount++;
-  if(frameCount > 8) {frameCount = 0}
+  if(frameCount % 3 === 0) {
+    currentFrame++
+    if(currentFrame > 8) currentFrame = 0;
+  }
 
 
 
