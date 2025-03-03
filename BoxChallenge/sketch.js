@@ -19,11 +19,11 @@ function draw() {
   let percenttime = (millis() % 10000) /10000
   if (percenttime <= .25){
     ypos = 0
-    xpos = windowWidth *percenttime/.25
+    xpos += 5.7
   }
   else if (percenttime >= .75){
     xpos = 0
-    ypos = windowWidth * .75/ percenttime
+    ypos -= 5.7
   }
   else if (percenttime >= .50){
     xpos -= 5.7
@@ -31,7 +31,7 @@ function draw() {
   }
   else if (percenttime > .25){
     xpos = windowWidth - 50
-    ypos = windowWidth * percenttime/.50
+    ypos +=5.7
   }
   square(xpos,ypos,50);
 }

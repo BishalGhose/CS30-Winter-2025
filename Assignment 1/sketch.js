@@ -35,7 +35,7 @@ function draw() {
 
   //Manager for day/night cycle, draws stuff like sun, clouds, stars depending on day/night
   switch(dayCycle){
-  case 1:
+  case 1: // Night Time
     drawNightGradient(1);
     drawStars(1.5);
     drawMoon();
@@ -43,7 +43,7 @@ function draw() {
     drawTree();
     break;
 
-  case 2: 
+  case 2: // Day Time
     drawDayGradient(1);
     drawSun(); 
     drawTerrain(70);
@@ -56,14 +56,6 @@ function draw() {
 }
 
 
-
-
-
-
-
-
-
-
 //Draws a moon and makes it follow the players mouse
 function drawMoon(){
   stroke(50,100); fill(120);
@@ -74,8 +66,8 @@ function drawMoon(){
   //Draws the specs/craters on the moon 
   fill(70);
   let CoordsAndSizes = [[2,48,50], [-10, -70, 25], [-50, -20, 40], [40, -30,55], [-52, 33, 20], [55, 27, 27]];
-  for (let thing of CoordsAndSizes){
-    circle(mouseX + thing[0], mouseY + thing[1], thing[2]);
+  for (let coords of CoordsAndSizes){
+    circle(mouseX + coords[0], mouseY + coords[1], coords[2]);
   }
 }
 
