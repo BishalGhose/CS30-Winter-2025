@@ -4,12 +4,11 @@
 
 
 
-let noiseIncrement = 0.01;
+let rectangleSize = 1;
 
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  rectMode(CORNERS);
 }
 
 function draw() {
@@ -22,10 +21,10 @@ function draw() {
 function generateTerrain(){
   noStroke();
   fill(255,0,0);
-  for (let x = 0; x < windowWidth; x+= noiseIncrement){
-    let rectHeight = noise(x) ;
-    let mappedRectHeight = map(rectHeight, 0,1,windowHeight*0.5, windowHeight);
-    console.log(x,windowHeight, x + noiseIncrement, mappedRectHeight);
-    rect(x,windowHeight, x + noiseIncrement, mappedRectHeight);
+  for (let x = 0; x < windowWidth; x+= rectangleSize){
+    let variable = noise(rectangleSize/100);
+    let mapNoisedVariable = map(variable, 0, 1,0 , windowHeight);
+    console.log(variable, mapNoisedVariable, x, windowHeight, mapNoisedVariable);
+    rect(x, windowHeight, x + rectangleSize, mapNoisedVariable);
   }
 }
