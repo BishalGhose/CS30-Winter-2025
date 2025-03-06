@@ -12,11 +12,9 @@ function setup() {
 }
 
 function draw() {
-  rectMode(CORNERS);
+  background(255); noStroke(); fill(0);
   generateTerrain();
 }
-
-
 
 function generateTerrain(){
   noStroke();
@@ -27,4 +25,5 @@ function generateTerrain(){
     console.log(variable, mapNoisedVariable, x, windowHeight, mapNoisedVariable);
     rect(x, windowHeight, x + rectangleSize, mapNoisedVariable);
   }
+  time += 1;
 }
