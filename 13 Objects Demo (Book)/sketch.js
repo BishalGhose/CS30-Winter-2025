@@ -5,15 +5,22 @@
 
 
 let myBook;
-
+let bookshelf = [];
 
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  //Make 20 books in a row
+  let x = 50;
+  let covers = ["softcover", "hardcover", "leatherbound"];
+  for(let i = 0; i < 20; i++){
+    let choise = int(random(3));
+    bookshelf.push(new Book("A", "Mr. Booth", 11111111, covers[choice], 200, x));
+    x += 20;
+  }
   myBook = new Book("CS30 Text", "Mr.Scott", 1234567891011, "leatherbound", 515, width * 0.3);
   myBook2 = new Book("A road", "Bishal", 1243554691011, "softcover", 515, width * 0.4);
   myBook3 = new Book("Journeys end", "tell", 1243554691011, "hardcover", 515, width * 0.5);
-  for (let)
 }
 
 function draw() {

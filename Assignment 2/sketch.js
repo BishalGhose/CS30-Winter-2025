@@ -24,12 +24,10 @@ function generateTerrain(){
   noStroke();
   fill(255,0,0);
   for (let x = 0; x < windowWidth; x+= noiseIncrement){
-    let variable = noise((x + time)/100);
-    let mapNoisedVariable = map(variable, 0, 1, windowHeight/2 , windowHeight);
+    let noiseVariable = noise((x + time)/100);
+    
+    let mapNoisedVariable = map(noiseVariable, 0, 1, windowHeight/2 , windowHeight);
     listOfHeights.push(mapNoisedVariable);
-    for (let i of listOfHeights){
-
-    }
     rect(x, windowHeight, x + noiseIncrement, mapNoisedVariable);
   }
 
@@ -41,7 +39,7 @@ function generateTerrain(){
   }
 
   averageHeight = averageHeight/listOfHeights.length;
-  console.log(biggestHeight, averageHeight)
+  console.log(biggestHeight, averageHeight);
   time += 1;
   biggestHeight = 0;
 }
