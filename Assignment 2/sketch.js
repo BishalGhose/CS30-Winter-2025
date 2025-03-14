@@ -7,7 +7,7 @@
 let noiseIncrement = 1;
 let time = 0;
 let averageHeight = 0;
-let biggestHeight = 0;
+let biggestHeightCoords;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -21,29 +21,30 @@ function draw() {
 
 function generateTerrain(){
   let listOfHeights = [];
-  noStroke();
-  fill(255,0,0);
-  for (let x = 0; x < windowWidth; x+= noiseIncrement){
+  let biggestHeight = windowHeight;
+  noStroke();   fill(0);
+  for (let x = 0; x < windowWidth; x += noiseIncrement){
     let noiseVariable = noise((x + time)/100);
-    
     let mapNoisedVariable = map(noiseVariable, 0, 1, windowHeight/2 , windowHeight);
-    listOfHeights.push(mapNoisedVariable);
+    listOfHeights.push([mapNoisedVariable, x]);
     rect(x, windowHeight, x + noiseIncrement, mapNoisedVariable);
   }
 
   for (let i of listOfHeights){
-    averageHeight += i;
-    if (i > biggestHeight) {
-      biggestHeight = i;
+    averageHeight += i[0];
+    if (i[0] < biggestHeight) {
+      biggestHeight = i[0];
+      biggestHeightCoords = [i[1], biggestHeight];
     }
   }
 
   averageHeight = averageHeight/listOfHeights.length;
-  console.log(biggestHeight, averageHeight);
+  drawFlag();
   time += 1;
-  biggestHeight = 0;
 }
 
 function drawFlag() {
-
+  strokeWeight(5);
+  stroke(100);
+  line(biggestHeightCoords[0], biggestHeightCoords[1], biggestHeightCoords[0], biggestHeightCoords[1] - 50);
 }
