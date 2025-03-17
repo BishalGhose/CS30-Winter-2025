@@ -39,12 +39,34 @@ function generateTerrain(){
   }
 
   averageHeight = averageHeight/listOfHeights.length;
+
+  displayAverageHeight(averageHeight);
   drawFlag();
   time += 1;
 }
 
 function drawFlag() {
+  let xCord = biggestHeightCoords[0];
+  let yCord = biggestHeightCoords[1];
   strokeWeight(5);
-  stroke(100);
-  line(biggestHeightCoords[0], biggestHeightCoords[1], biggestHeightCoords[0], biggestHeightCoords[1] - 50);
+  line(xCord, yCord, xCord, yCord - 50);
+  fill(255, 0, 0);
+  triangle(xCord, yCord - 25, xCord, yCord - 50, xCord + 25, yCord - 37.5);
+}
+
+function displayAverageHeight(averageHeight){
+  stroke(255,0,0);
+  strokeWeight(2);
+  line(0, averageHeight, windowWidth, averageHeight);
+  fill(255);
+  text("Average Height = " + Math.round(Math.abs(averageHeight - windowHeight)) + " pixels", windowWidth*1/70, windowHeight*39/40);
+}
+
+function keyPressed(){
+  if (keyCode === 37){
+    noiseIncrement -= 1;
+  }
+  else if (keyCode === 39){
+    noiseIncrement += 1;
+  }
 }
