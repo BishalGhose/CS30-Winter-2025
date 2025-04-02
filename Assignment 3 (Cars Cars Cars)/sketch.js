@@ -22,13 +22,13 @@ function drawRoad() {
   strokeWeight(10);
   fill(0);
 
-  rect(width/2, height/2, width + 10, height/2)
+  rect(width/2, height/2, width + 10, height/2);
 
   stroke(255, 255, 0);
   strokeWeight(4);
 
   for (let i = 0; i <= width; i += 30){
-    line(i+ 7.5, height/2, i + 22.5, height/2)
+    line(i+ 7.5, height/2, i + 22.5, height/2);
   }
 }
 

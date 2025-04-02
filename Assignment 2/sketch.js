@@ -12,6 +12,7 @@ let biggestHeightCoords;
 function setup() {
   createCanvas(windowWidth, windowHeight);
   rectMode(CORNERS);
+  frameRate(10);
 }
 
 
@@ -53,7 +54,7 @@ function generateTerrain(){
 }
 
 function drawFlag() {
-  let xCord = biggestHeightCoords[0];
+  let xCord = biggestHeightCoords[0] + noiseIncrement/2;
   let yCord = biggestHeightCoords[1];
 
   strokeWeight(5);
