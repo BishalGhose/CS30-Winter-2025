@@ -1,6 +1,11 @@
 // Cars Cars Cars
 // Bishal Ghose
-// Date
+
+// Space = change to red light
+// Left Click = add car to eastbound/top half
+// Shift + Left Click = add car to westbound/bottom half
+// Right Click = remove car to eastbound/top half
+// Shift + Right Click = remove car to westbound/bottom half
 
 // Setting the global variables
 let eastbound = [];
@@ -8,6 +13,7 @@ let westbound = [];
 let light;
 let timer = 0;
 let changingLight = false;
+let shiftReleased = true;
 
 
 // Creating canvas, making the light, and pushing 20 cars to each bound
@@ -17,7 +23,7 @@ function setup() {
 
   light = new trafficLight();
 
-  for (let i = 0; i < 20; i++){
+  for (let i = 0; i < 10; i++){
     eastbound.push(new Car("east"));
     westbound.push(new Car("west"));
   }
@@ -35,8 +41,8 @@ function draw() {
 }
 
 
-// This compares all the distances in both east/west bounds 
-// and slows down/speeds up depending on it and calls .action() for every item
+/* This compares all the distances in both east/west bounds 
+ and slows down/speeds up depending on it and calls .action() for every item */
 function mainPlayer(boundArray, direction){
   for (let i = 0; i < boundArray.length; i++){
     for (let u = 0; u < boundArray.length; u++){
@@ -104,7 +110,8 @@ class trafficLight{
 }
 
 
-// When the space bar is pressed and !changing light, state turns to yellow and every car slows down and updates timer
+/* When the space bar is pressed and !changing light, 
+ state turns to yellow and every car slows down and updates timer */
 function keyPressed(){
   if (keyCode === 32 && !changingLight) {
     changingLight = true;
@@ -115,6 +122,11 @@ function keyPressed(){
     }
 
     timer = frameCount;
+  }
+
+  // If shift is pressed then shift released become false
+  else if (keyCode === 16){
+    shiftReleased = false;
   }
 }
 
@@ -208,8 +220,8 @@ class Car {
     this.xSpeed *= 0.9;
   }
 
-  // Sets a speed limit to the vehicle to 5 and if it exceeds 5, 
-  // it slows down to a random speed from 1-5
+  /* Sets a speed limit to the vehicle to 5 and if it exceeds 5, 
+  it slows down to a random speed from 1-5 */
   speedLimit(){
     if (this.xSpeed > 5){
       this.xSpeed = random(1,5);
@@ -251,18 +263,22 @@ class Car {
 
     this.speedLimit();
     this.move();
-    this.exponentialSpeedUp();
 
-    // Sets a 1% chance for each function to be called
-    let randomNum = floor(random(1,101));
-    if (randomNum === 1){
-      this.speedUp();
-    }
-    else if (randomNum === 2) {
-      this.speedDown();
-    }
-    else if (randomNum === 3){
-      this.changeColor();
+    // Check if changing light is not true before it runs
+    if (!changingLight) {
+      this.exponentialSpeedUp();
+
+      // Sets a 1% chance for each function to be called
+      let randomNum = floor(random(1,101));
+      if (randomNum === 1){
+        this.speedUp();
+      }
+      else if (randomNum === 2) {
+        this.speedDown();
+      }
+      else if (randomNum === 3){
+        this.changeColor();
+      }
     }
 
     this.display();
@@ -270,21 +286,34 @@ class Car {
 }
 
 
-// When mouse is released it checks if it's left/right button and checks
-// if keycode 16(shift) is down and adds/deletes cars on east/west bound using push/pop
+/* When mouse is released it checks if it's left/right button and checks
+if keycode 16(shift) is down and adds/deletes cars on east/west bound using push/pop */
 function mouseReleased(){ 
   if (mouseButton === LEFT) { // Adds cars
-    if (keyIsDown && keyCode === 16) {
+    if (!shiftReleased) {
       westbound.push(new Car("west"));
     }
-    eastbound.push(new Car("east"));
+    else {
+      eastbound.push(new Car("east"));
+    }
   }
 
   else if (mouseButton === RIGHT) { // Removes cars
-    if (keyIsDown && keyCode === 16) {
+    if (!shiftReleased) {
       westbound.pop();
     }
-    eastbound.pop();
+    else {
+      eastbound.pop();
+    }
+  }
+}
+
+/* When shift is released, shift released becomes true
+also somestimes the keyReleased function doesnt run occasionally
+when I release shift */
+function keyReleased(){
+  if (keyCode === 16) {
+    shiftReleased = true;
   }
 }
 
