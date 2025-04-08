@@ -13,7 +13,6 @@ let westbound = [];
 let light;
 let timer = 0;
 let changingLight = false;
-let shiftReleased = true;
 
 
 // Creating canvas, making the light, and pushing 20 cars to each bound
@@ -22,17 +21,15 @@ function setup() {
   rectMode(CENTER);
 
   light = new trafficLight();
-
-  for (let i = 0; i < 10; i++){
+  for (let i = 0; i < 20; i++){
     eastbound.push(new Car("east"));
     westbound.push(new Car("west"));
   }
 }
 
-//Updating the canvas, drawing the road, and calling the lights manager and main car players
+// Updating the canvas, drawing the road, and calling the lights manager and main car players
 function draw() {
   createCanvas(windowWidth, windowHeight);
-  background(220);
   drawRoad();
 
   mainPlayer(eastbound, "east");
@@ -42,7 +39,7 @@ function draw() {
 
 
 /* This compares all the distances in both east/west bounds 
- and slows down/speeds up depending on it and calls .action() for every item */
+ & slows down/speeds up depending on it and calls .action() for every item */
 function mainPlayer(boundArray, direction){
   for (let i = 0; i < boundArray.length; i++){
     for (let u = 0; u < boundArray.length; u++){
@@ -59,7 +56,8 @@ function mainPlayer(boundArray, direction){
         xDistance = boundArray[u].x - boundArray[i].x;
       }
 
-      // Distance comparer
+      /* Distance comparer, if cars are too close, the front 
+      one will speed up while the back one slows down*/
       let yDistance = Math.abs(boundArray[i].y - boundArray[u].y);
       if (xDistance >= 0 && xDistance <= 45 && yDistance <= 20) {
         boundArray[i].xSpeed = boundArray[u].xSpeed/2;
@@ -78,7 +76,7 @@ function drawRoad() {
   strokeWeight(10);
   fill(0);
 
-  rect(width/2, height/2, width + 10, 1.1 * height/2);
+  rect(width/2, height/2, width + 10, 1.1 * height/2); // Road
 
   stroke(255, 255, 0);
   strokeWeight(4);
@@ -117,16 +115,11 @@ function keyPressed(){
     changingLight = true;
     light.state = "yellow";
 
-    for (let i of eastbound.concat(westbound)){
+    for (let i of eastbound.concat(westbound)){ // Combines arrays and slows all cars down
       i.xSpeed = random(1);
     }
 
     timer = frameCount;
-  }
-
-  // If shift is pressed then shift released become false
-  else if (keyCode === 16){
-    shiftReleased = false;
   }
 }
 
@@ -212,12 +205,12 @@ class Car {
 
   // Speeds up the vehicle
   speedUp(){
-    this.xSpeed *= 1.5;
+    this.xSpeed *= 1.1;
   }
 
   // Slows down the vehicle
   speedDown(){
-    this.xSpeed *= 0.9;
+    this.xSpeed *= 0.7;
   }
 
   /* Sets a speed limit to the vehicle to 5 and if it exceeds 5, 
@@ -286,34 +279,16 @@ class Car {
 }
 
 
-/* When mouse is released it checks if it's left/right button and checks
-if keycode 16(shift) is down and adds/deletes cars on east/west bound using push/pop */
+/* When mouse is released, checks if it's left button and checks
+if keycode 16(shift) is down and adds cars on east/west bound */
 function mouseReleased(){ 
   if (mouseButton === LEFT) { // Adds cars
-    if (!shiftReleased) {
+    if (keyIsDown(16)) {
       westbound.push(new Car("west"));
     }
     else {
       eastbound.push(new Car("east"));
     }
-  }
-
-  else if (mouseButton === RIGHT) { // Removes cars
-    if (!shiftReleased) {
-      westbound.pop();
-    }
-    else {
-      eastbound.pop();
-    }
-  }
-}
-
-/* When shift is released, shift released becomes true
-also somestimes the keyReleased function doesnt run occasionally
-when I release shift */
-function keyReleased(){
-  if (keyCode === 16) {
-    shiftReleased = true;
   }
 }
 
