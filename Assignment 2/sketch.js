@@ -20,7 +20,6 @@ function setup() {
 
 // Calling the functions every frame
 function draw() {
-  createCanvas(windowWidth, windowHeight);
   background(255); noStroke(); fill(0);
 
   generateTerrain();
@@ -32,17 +31,17 @@ function draw() {
 function generateTerrain(){
 
   let listOfHeights = [];
-  let biggestHeight = height;
+  let biggestHeight = windowHeight;
 
   noStroke(); fill(0);
 
   // Sets a noise variable depending on the time and x-value, maps it and draws a rectangle with that variable
-  for (let x = 0; x < width; x += noiseIncrement){
+  for (let x = 0; x < windowWidth; x += noiseIncrement){
     let noiseVariable = noise((x + time) / 100);
-    let mapNoisedVariable = map(noiseVariable, 0, 1, height/2 , height);
+    let mapNoisedVariable = map(noiseVariable, 0, 1, windowHeight/2 , windowHeight);
 
     listOfHeights.push([mapNoisedVariable, x]); // Saves the variables
-    rect(x, height, x + noiseIncrement, mapNoisedVariable);
+    rect(x, windowHeight, x + noiseIncrement, mapNoisedVariable);
   }
 
   /* Calculates the biggest height by looping through and comparing every height
@@ -75,9 +74,9 @@ function drawFlag() {
 function displayAverageHeight(averageHeight){
   stroke(255,0,0); strokeWeight(2);
 
-  line(0, averageHeight, width, averageHeight);
+  line(0, averageHeight, windowWidth, averageHeight);
   fill(255);
-  text("Average Height = " + Math.round(Math.abs(averageHeight - height)) + " pixels", width*1/70, height*39/40);
+  text("Average Height = " + Math.round(Math.abs(averageHeight - windowHeight)) + " pixels", windowWidth*1/70, windowHeight*39/40);
 }
 
 

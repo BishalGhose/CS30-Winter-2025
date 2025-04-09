@@ -5,7 +5,9 @@ let NUM_COLS = 5;
 let rectWidth, rectHeight;
 let currentRow, currentCol;
 let gridData = [[],[],[],[]];
-
+let clickState = 0;
+let direction;
+let activeSquares;
 
 
 function setup() {
@@ -24,10 +26,12 @@ function setup() {
 }
 
 function draw() {
+  createCanvas(windowWidth, windowHeight);
   background(220/255);
   determineActiveSquare();   //figure out which tile the mouse cursor is over
   drawGrid();
-  winChecker();                //render the current game board to the screen (and the overlay)
+  winChecker();               //render the current game board to the screen (and the overlay)
+  console.log(activeSquares);
 }
 
 
@@ -46,16 +50,7 @@ function winChecker(){
 
 function mousePressed(){
   // cross-shaped pattern flips on a mouseclick. Boundary conditions are checked within the flip function to ensure in-bounds access for array
-  if (keyIsDown(16)){
-    flip(currentCol, currentRow);
-  }
-  else {
-    flip(currentCol, currentRow);
-    flip(currentCol-1, currentRow);
-    flip(currentCol+1, currentRow);
-    flip(currentCol, currentRow-1);
-    flip(currentCol, currentRow+1);
-  }
+
 }
 
 function flip(col, row){
@@ -73,6 +68,52 @@ function determineActiveSquare(){
   // An expression to run each frame to determine where the mouse currently is.
   currentRow = int(mouseY / rectHeight);
   currentCol = int(mouseX / rectWidth);
+
+  let dx = mouseX - currentCol * rectWidth - rectWidth/2;
+  let dy = mouseX - currentCol * rectWidth - rectWidth/2;
+  if (dy <= 0){
+    if (dx <= 0){
+      direction = 135;
+    }
+    else {
+      direction = 45;
+    }
+  }
+  else {
+    if (dx <= 0){
+      direction = 225;
+    }
+    else {
+      direction = 315;
+    }
+  }
+
+  switch (clickState) {
+  case 0:
+    activeSquares = [[currentCol, currentRow]];
+    break;
+
+  case 1:
+    activeSquares = [[currentCol, currentRow], [currentCol + 1, currentRow],  [currentCol - 1, currentRow], [currentCol, currentRow + 1], [currentCol, currentRow - 1]];
+    break;
+
+  case 2:
+    switch (direction){
+    case 45:
+      activeSquares = [[currentCol, currentRow], [currentCol + 1, currentRow], [currentCol, currentRow + 1], [currentCol + 1, currentRow + 1]];
+      break;
+    case 135:
+      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow + 1], [currentCol - 1, currentRow + 1]];
+      break;
+    case 225:
+      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow - 1], [currentCol - 1, currentRow - 1]];
+      break;
+    case 315:
+      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow + 1], [currentCol - 1, currentRow + 1]];
+      break;
+    }
+    break;
+  }
 }
 
 function drawGrid(){
@@ -81,6 +122,31 @@ function drawGrid(){
     for (let y = 0; y < NUM_ROWS; y++){
       fill(gridData[y][x]); 
       rect(x*rectWidth, y*rectHeight, rectWidth, rectHeight);
+    }
+  }
+}
+
+
+function keyPressed(){
+  if (keyCode === 16){
+    clickState = 2;
+    return;
+  }
+}
+
+function keyReleased(){
+  if (keyCode === 16) {
+    clickState = 0;
+  }
+  
+  if (keyCode === 32 && !keyIsDown(16)) {
+    switch (clickState) {
+    case 0: 
+      clickState = 1;
+      break;
+    case 1:
+      clickState = 0;
+      break;
     }
   }
 }

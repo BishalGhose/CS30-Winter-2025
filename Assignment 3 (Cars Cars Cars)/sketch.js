@@ -27,11 +27,9 @@ function setup() {
   }
 }
 
-// Updating the canvas, drawing the road, and calling the lights manager and main car players
+// Drawing the road and calling the lights manager and main players for cars
 function draw() {
-  createCanvas(windowWidth, windowHeight);
   drawRoad();
-
   mainPlayer(eastbound, "east");
   mainPlayer(westbound, "west");
   lightManager();
