@@ -5,8 +5,8 @@ let NUM_COLS = 5;
 let rectWidth, rectHeight;
 let currentRow, currentCol;
 let gridData = [[],[],[],[]];
-let clickState = 0;
-let direction;
+let clickState = 1;
+let direction; 
 let activeSquares;
 
 
@@ -31,7 +31,6 @@ function draw() {
   determineActiveSquare();   //figure out which tile the mouse cursor is over
   drawGrid();
   winChecker();               //render the current game board to the screen (and the overlay)
-  console.log(activeSquares);
 }
 
 
@@ -45,12 +44,15 @@ function winChecker(){
     fill(0,1,0);
     text("You Win!", width/2, height/2);
   }
+
 }
 
 
 function mousePressed(){
   // cross-shaped pattern flips on a mouseclick. Boundary conditions are checked within the flip function to ensure in-bounds access for array
-
+  for (let i of activeSquares) {
+    flip(i[0], i[1]);
+  }
 }
 
 function flip(col, row){
@@ -87,7 +89,7 @@ function determineActiveSquare(){
       direction = 315;
     }
   }
-
+  console.log(direction);
   switch (clickState) {
   case 0:
     activeSquares = [[currentCol, currentRow]];
@@ -98,20 +100,22 @@ function determineActiveSquare(){
     break;
 
   case 2:
-    switch (direction){
-    case 45:
+    if (direction === 45){
       activeSquares = [[currentCol, currentRow], [currentCol + 1, currentRow], [currentCol, currentRow + 1], [currentCol + 1, currentRow + 1]];
-      break;
-    case 135:
-      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow + 1], [currentCol - 1, currentRow + 1]];
-      break;
-    case 225:
-      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow - 1], [currentCol - 1, currentRow - 1]];
-      break;
-    case 315:
-      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow + 1], [currentCol - 1, currentRow + 1]];
-      break;
+      console.log("45");
     }
+    else if (direction === 135){
+      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow + 1], [currentCol - 1, currentRow + 1]];
+      console.log("135");
+    }
+    else if (direction === 225){ 
+      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow - 1], [currentCol - 1, currentRow - 1]];
+      console.log("225");
+    }
+    else {
+      activeSquares = [[currentCol, currentRow], [currentCol - 1, currentRow], [currentCol, currentRow + 1], [currentCol - 1, currentRow + 1]];
+      console.log("315");
+    } 
     break;
   }
 }
@@ -120,7 +124,15 @@ function drawGrid(){
   // Render a grid of squares - fill color set according to data stored in the 2D array
   for (let x = 0; x < NUM_COLS ; x++){
     for (let y = 0; y < NUM_ROWS; y++){
-      fill(gridData[y][x]); 
+      for (let i of activeSquares){
+        if (x === i[0] && y === i[1]){
+          fill(0,255, 0);
+          break;
+        }
+        else {
+          fill(gridData[y][x]); 
+        }
+      }
       rect(x*rectWidth, y*rectHeight, rectWidth, rectHeight);
     }
   }
@@ -128,7 +140,7 @@ function drawGrid(){
 
 
 function keyPressed(){
-  if (keyCode === 16){
+  if (keyCode === 16){ 
     clickState = 2;
     return;
   }
@@ -141,12 +153,12 @@ function keyReleased(){
   
   if (keyCode === 32 && !keyIsDown(16)) {
     switch (clickState) {
-    case 0: 
-      clickState = 1;
+    case 1: 
+      clickState = 2;
       break;
-    case 1:
-      clickState = 0;
+    case 2:
+      clickState = 1;   
       break;
     }
   }
-}
+}  
