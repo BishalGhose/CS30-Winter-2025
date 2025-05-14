@@ -1,0 +1,15 @@
+local module = {}
+
+function module.MakeMiniStud(biome, shape, typeOfStud)
+	if shape == "normal" then
+		
+	elseif shape == "spikey" then
+	
+	elseif shape == "flat" then
+	
+	end
+end
+
+
+function
+

@@ -4,13 +4,14 @@ module.BiomeChanceData =
 
 {
 	["AutumnGrass"] = 7,
-	["CrimsonGrass"] = 60,
+	["CrimsonGrass"] = 20,
 	["DesertGrass"] = 2,
 	["DirtGrass"] = 4,
-	["HolyGrass"] = 100,
-	["FairyGrass"] = 12,
+	["HolyGrass"] = 25,
+	["FairyGrass"] = 10,
 	["SnowyGrass"] = 3,
-	["TwilightGrass"] = 25
+	["StoneyGrass"] = 2,
+	["TwilightGrass"] = 15
 }
 
 
