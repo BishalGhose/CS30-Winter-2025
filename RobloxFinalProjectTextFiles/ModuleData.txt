@@ -1,0 +1,19 @@
+local module = {}
+
+module.BiomeChanceData =
+
+{
+	["AutumnGrass"] = 7,
+	["CrimsonGrass"] = 60,
+	["DesertGrass"] = 2,
+	["DirtGrass"] = 4,
+	["HolyGrass"] = 100,
+	["FairyGrass"] = 12,
+	["SnowyGrass"] = 3,
+	["TwilightGrass"] = 25
+}
+
+
+
+
+return module

@@ -1,0 +1,114 @@
+local module = {}
+
+
+function module.MakeBiomeNoise(x, z, scale, increment, name, seed, part)
+	local CollectionService = game:GetService("CollectionService")
+	if CollectionService:HasTag(part, "WaterBlock")
+	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
+	
+	for i,v in part:GetChildren() do
+		v:Destroy()
+	end
+	
+	if name == "NormalGrass" then
+		local Biomes = game.ReplicatedStorage.Biomes
+		local NormalGrass = Biomes.NormalGrass
+		local ForestGrass = Biomes.ForestGrass
+	
+		if noiseLocation > -0.7 then
+			part.Color = NormalGrass.Dirt.Color
+			part.Material = NormalGrass.Dirt.Material
+			local GrassClone = NormalGrass.Grass:Clone()
+			GrassClone.Parent = part
+			GrassClone.Size = Vector3.new(part.Size.X, 1, part.Size.Z)
+			GrassClone.Position = Vector3.new(part.Size.X, part.Position.Y + part.Size.Y/2 + 0.5, part.Size.Z)
+		else
+			part.Color = ForestGrass.Dirt.Color
+			part.Material = ForestGrass.Dirt.Material
+			local GrassClone = ForestGrass.Grass:Clone()
+			GrassClone.Parent = part
+			GrassClone.Size = Vector3.new(part.Size.X, 1, part.Size.Z)
+			GrassClone.Position = Vector3.new(part.Size.X, part.Position.Y + part.Size.Y/2 + 0.5, part.Size.Z)
+		end
+	else
+		
+	end
+end
+
+
+
+function module.HeightNoise(x, z, size, scale, increment, seed1, part)
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local CollectionService = game:GetService("CollectionService")
+
+	
+	local noiseLocation = math.noise((x + seed1) / (increment/2.5) * scale, (z + seed1) / (increment/2.5) * scale)
+	local normalized = noiseLocation + 1           
+	local y = normalized * 100       
+
+	local middleValue = size/2
+
+	local center = Vector2.new(size/2, size/2)
+	local pos = Vector2.new(x, z)
+
+	local distFromCenter = (pos - center).Magnitude
+	local maxDist = (Vector2.new(0, 0) - center).Magnitude
+	local invertedDist = 1 - (distFromCenter / maxDist)
+	local yExtraSize = invertedDist * 500
+
+
+
+	if noiseLocation > 0.5 then
+		part.Size = Vector3.new(increment + math.random(increment/2), y + yExtraSize, increment + math.random(increment/2))
+	else
+		part.Size = Vector3.new(increment + math.random(increment*2), y + yExtraSize, increment + math.random(increment*2))
+	end
+
+	if noiseLocation < -0.3 then
+		CollectionService:AddTag("WaterBlock")
+	end
+
+
+
+	part.Anchored = true
+	part.Position = Vector3.new(x, y/2 - yExtraSize/2, z)
+	part.Parent = workspace.MainParts
+end
+	
+function module.MakeMap()
+	local ReplicatedStorage = game:GetService("ReplicatedStorage")
+	local ModuleData = require(ReplicatedStorage.ModuleData)
+	
+	local size = 2048
+	local scale = 0.02
+	local increment = 64
+	local seed1 = math.random(1,100000000)
+	local seed2 = math.random(1,100000000)
+	
+	local listOfValidBiomes = {
+		{"NormalGrass", math.random(1,100000000)}
+	}
+	
+	for i,v in ModuleData.BiomeChanceData do
+		if math.random(1,v) == v then
+			table.insert(listOfValidBiomes, {i, math.random(1,100000000)})
+		end
+	end
+	
+		
+	
+	for x = increment, size, increment do
+		for z = increment, size, increment do
+			local part = ReplicatedStorage.NormalPart:Clone()
+
+			module.HeightNoise(x, z, scale, increment, seed1, part)
+			
+
+			for i,v in listOfValidBiomes do
+				module.MakeBiomeNoise(x, z, scale, increment, i, v[2], part)
+			end
+		end
+	end
+
+	
+end
