@@ -136,8 +136,8 @@ function module.MakeMap()
 	local size = 1536
 	local scale = 0.02
 	local increment = 64
-	local seed1 = math.random(1,100000000)
-	local seed2 = math.random(1,100000000)
+	local seed = math.random(1,100000000)
+
 	
 	local listOfValidBiomes = {
 		{"NormalGrass", math.random(1,100000000)}
@@ -155,7 +155,7 @@ function module.MakeMap()
 		for z = increment, size, increment do
 			local part = ReplicatedStorage.NormalPart:Clone()
 
-			module.HeightNoise(x, z, size, scale, increment, seed1, part)
+			module.HeightNoise(x, z, size, scale, increment, seed, part)
 			
 
 			for i,v in listOfValidBiomes do
@@ -164,4 +164,35 @@ function module.MakeMap()
 		end
 	end
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+return module
 

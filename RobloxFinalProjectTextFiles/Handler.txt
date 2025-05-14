@@ -1,15 +1,17 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local MainModuleFunctions = require(ServerStorage.MainModuleFunctions)
+local TerrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
 
+MainModuleFunctions.MakeMap()
+TerrainDecorationsManager.DecorateMap()
 
-
-
-while task.wait(10) do
+while task.wait(30) do
 	for i,v in workspace.MainParts:GetChildren() do
 		v:Destroy()
 	end
 	
 	MainModuleFunctions.MakeMap()
+	TerrainDecorationsManager.DecorateMap()
 end
 

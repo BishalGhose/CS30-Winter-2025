@@ -3,7 +3,7 @@ local CollectionService = game:GetService("CollectionService")
 local ServerStorage = game:GetService("ServerStorage")
 local RunService = game:GetService("RunService")
 local ModuleData = require(ServerStorage.ModuleData)
-
+local ProceduralFunctions = require(ServerStorage.ProceduralFunctions)
 
 
 local module = {}
@@ -20,36 +20,146 @@ local module = {}
 function module.DecorateMap()
 	for i,v in game.Workspace.MainParts:GetChildren() do
 		local BiomeType = v:GetTags()[1]
+
 		if BiomeType == "Water" then
 			
 		elseif BiomeType == "NormalGrass" then ---------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.NormalGrass + math.random(0,2)
+			local amountOfObjects = ModuleData.BiomeObjectDensity.NormalGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 900 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", 0, 1)
+				end
+			end
+			
+
+		elseif BiomeType == "ForestGrass" then ---------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.ForestGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 980 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1)
+				end
+			end
+
+		elseif BiomeType == "DesertGrass" then ------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.DesertGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 800 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -3, 1)
+				end
+			end
+			
+		elseif BiomeType == "StoneyGrass" then --------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.StoneyGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 500 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "spikey", 0, 1)
+				elseif RNG > 400 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", 0, 1)
+				elseif RNG > 200 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "flat", -3, 1)
+				end
+			end
+			
+		elseif BiomeType == "SnowyGrass" then ------------------------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.SnowyGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 850 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1.5)
+				end
+			end
+			
+		elseif BiomeType == "DirtGrass" then ------------------------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.DirtGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 850 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1)
+				end
+			end
+			
+		elseif BiomeType == "AutumnGrass" then ------------------------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.AutumnGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 930 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1)
+				end
+			end
+			
+		elseif BiomeType == "FairyGrass" then ------------------------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.FairyGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 950 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1)
+				end
+			end
+			
+		elseif BiomeType == "TwilightGrass" then ------------------------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.TwilightGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 950 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -3, 1)
+				end
+			end
+			
+		elseif BiomeType == "CrimsonGrass" then ------------------------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.CrimsonGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 950 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -3, 1)
+				end
+			end
+			
+		elseif BiomeType == "HolyGrass" then ------------------------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.HolyGrass + math.random(0,1)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+				if RNG > 970 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -4, 1)
+				end
+			end
+			
+		elseif BiomeType == "VolcanicGrass" then ------------------------------------------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.HolyGrass + math.random(0,1)
 
 
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 
+				if RNG > 800 then
+					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", 0, 1)
+				end
 			end
-			
-			
-		elseif BiomeType == "DesertGrass" then ---------------------------------------------------
-		
-		elseif BiomeType == "StoneyGrass" then ---------------------------------------------------
-
-		elseif BiomeType == "SnowyGrass" then ---------------------------------------------------
-
-		elseif BiomeType == "DirtGrass" then ---------------------------------------------------
-
-		elseif BiomeType == "AutumnGrass" then ---------------------------------------------------
-
-		elseif BiomeType == "FairyGrass" then ---------------------------------------------------
-
-		elseif BiomeType == "TwilightGrass" then ---------------------------------------------------
-
-		elseif BiomeType == "CrimsonGrass" then ---------------------------------------------------
-		
-		elseif BiomeType == "HolyGrass" then ---------------------------------------------------
-		
 		end
 	end
 end
