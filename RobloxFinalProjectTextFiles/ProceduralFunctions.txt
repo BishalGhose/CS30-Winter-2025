@@ -1,15 +1,51 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollectionService = game:GetService("CollectionService")
+local RunService = game:GetService("RunService")
+
+
+
+
 local module = {}
 
-function module.MakeMiniStud(biome, shape, typeOfStud)
-	if shape == "normal" then
-		
-	elseif shape == "spikey" then
-	
-	elseif shape == "flat" then
-	
+function module.MakeMiniStud(part, biome, shape)
+	local model = Instance.new("Model")
+	model.Parent = part
+
+
+	if shape == "normal" then ---------------------------------------------------------------------
+		for i = 1, math.random(3,5) do
+			local stud = ReplicatedStorage.Biomes[biome].Stud:Clone()
+			stud.Parent = model
+			stud.Position = stud.Position + Vector3.new(math.random(-5,5), math.random(0,5), math.random(-5,5))
+			stud.Size = stud.Size + Vector3.new(math.random(1,4), math.random(1,4), math.random(1,4))
+			local colorOffset = math.random(-10,10)
+			stud.Color = Color3.fromRGB(math.clamp(stud.Color.R*255 + colorOffset, 0 , 255), math.clamp(stud.Color.G*255 + colorOffset, 0 , 255), math.clamp(stud.Color.B*255 + colorOffset, 0 , 255))
+		end
+	elseif shape == "spikey" then ---------------------------------------------------------------------
+		for i = 1, math.random(4,6) do
+			local stud = ReplicatedStorage.Biomes[biome].Stud:Clone()
+			stud.Parent = model
+			stud.Position = stud.Position + Vector3.new(math.random(-3,3), math.random(0,6), math.random(-3,3))
+			stud.Size = stud.Size + Vector3.new(math.random(-1,3), math.random(6,12), math.random(-1,3))
+			local colorOffset = math.random(0,25)
+			stud.Color = Color3.fromRGB(math.clamp(stud.Color.R*255 + colorOffset, 0 , 255), math.clamp(stud.Color.G*255 + colorOffset, 0 , 255), math.clamp(stud.Color.B*255 + colorOffset, 0 , 255))
+		end
+	elseif shape == "flat" then ---------------------------------------------------------------------
+		for i = 1, math.random(2,3) do
+			local stud = ReplicatedStorage.Biomes[biome].Stud:Clone()
+			stud.Parent = model
+			stud.Position = stud.Position + Vector3.new(math.random(-3,3), math.random(0,6), math.random(-3,3))
+			stud.Size = stud.Size + Vector3.new(math.random(-1,3), math.random(6,12), math.random(-1,3))
+			local colorOffset = math.random(-15,2)
+			stud.Color = Color3.fromRGB(math.clamp(stud.Color.R*255 + colorOffset, 0 , 255), math.clamp(stud.Color.G*255 + colorOffset, 0 , 255), math.clamp(stud.Color.B*255 + colorOffset, 0 , 255))
+		end
 	end
+
+
+
+
+	model.PrimaryPart = model:GetChildren()[1]
+	model.
 end
 
-
-function
-
+return module

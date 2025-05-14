@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 local module = {}
@@ -8,6 +9,13 @@ function module.ReplaceBlock(part, GrassType)
 	for i,v in part:GetChildren() do
 		v:Destroy()
 	end
+
+	for i,v in CollectionService:GetTags(part) do
+		CollectionService:RemoveTag(part, v)
+	end
+
+	CollectionService:AddTag(part, GrassType.Name)
+
 	
 	local offsetColor1 = math.random(-10,10)/255
 	local red = math.clamp(GrassType.Dirt.Color.R + offsetColor1, 0, 1)
@@ -45,7 +53,7 @@ end
 
 function module.MakeBiomeNoise(x, z, scale, increment, name, seed, part)
 
-	if CollectionService:HasTag(part, "WaterBlock")  then
+	if CollectionService:HasTag(part, "Water")  then
 		return
 	end
 	
@@ -94,20 +102,36 @@ function module.HeightNoise(x, z, size, scale, increment, seed1, part)
 		part.Size = Vector3.new(increment + math.random(increment*2), y + yExtraSize, increment + math.random(increment*2))
 	end
 
+	local yMainPartLocation = y/2 - yExtraSize/2
+
+	
 	if noiseLocation < -0.3 then
-		CollectionService:AddTag(part, "WaterBlock")
-		part.Color = Color3.fromRGB(0,0,255)
+		CollectionService:AddTag(part, "Water")
+		
+		part.Material = Enum.Material.Sand
+		local difference1 = math.random(-15,15)
+		part.Color = Color3.fromRGB(199 + difference1, 159 + difference1, 119 + difference1)
+
+		local waterBlock = ReplicatedStorage.WaterBlock:Clone()
+		waterBlock.Parent = part
+
+		local ySize = 70 - (yMainPartLocation + part.Size.Y/2)
+		waterBlock.Size = Vector3.new(part.Size.X, ySize, part.Size.Z)
+		local yPosition = yMainPartLocation + part.Size.Y/2 + ySize/2
+		waterBlock.Position = Vector3.new(x, yPosition, z)
+		local difference2 = math.random(-15,15)
+		waterBlock.Color = Color3.fromRGB(math.clamp(waterBlock.Color.R*255 + difference2, 0, 255), waterBlock.Color.G*255 + difference2,waterBlock.Color.B*255 + difference2)
 	end
 
 
 
 	part.Anchored = true
-	part.Position = Vector3.new(x, y/2 - yExtraSize/2, z)
+	part.Position = Vector3.new(x, yMainPartLocation, z)
 	part.Parent = workspace.MainParts
 end
 	
 function module.MakeMap()
-	local ModuleData = require(ReplicatedStorage.ModuleData)
+	local ModuleData = require(ServerStorage.ModuleData)
 	
 	local size = 1536
 	local scale = 0.02
@@ -139,6 +163,5 @@ function module.MakeMap()
 			end
 		end
 	end
-	task.wait(0.05)
 end
 

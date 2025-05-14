@@ -1,0 +1,64 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollectionService = game:GetService("CollectionService")
+local ServerStorage = game:GetService("ServerStorage")
+local RunService = game:GetService("RunService")
+local ModuleData = require(ServerStorage.ModuleData)
+
+
+
+local module = {}
+
+
+
+
+
+
+
+
+
+
+function module.DecorateMap()
+	for i,v in game.Workspace.MainParts:GetChildren() do
+		local BiomeType = v:GetTags()[1]
+		if BiomeType == "Water" then
+			
+		elseif BiomeType == "NormalGrass" then ---------------------------------------------------
+			local amountOfObjects = ModuleData.BiomeObjectDensity.NormalGrass + math.random(0,2)
+
+
+			for x = 1, amountOfObjects do
+				local RNG = math.random(1,1000)
+
+			end
+			
+			
+		elseif BiomeType == "DesertGrass" then ---------------------------------------------------
+		
+		elseif BiomeType == "StoneyGrass" then ---------------------------------------------------
+
+		elseif BiomeType == "SnowyGrass" then ---------------------------------------------------
+
+		elseif BiomeType == "DirtGrass" then ---------------------------------------------------
+
+		elseif BiomeType == "AutumnGrass" then ---------------------------------------------------
+
+		elseif BiomeType == "FairyGrass" then ---------------------------------------------------
+
+		elseif BiomeType == "TwilightGrass" then ---------------------------------------------------
+
+		elseif BiomeType == "CrimsonGrass" then ---------------------------------------------------
+		
+		elseif BiomeType == "HolyGrass" then ---------------------------------------------------
+		
+		end
+	end
+end
+
+
+function module.NormalGrassDecorate()
+	
+end
+
+
+
+return module

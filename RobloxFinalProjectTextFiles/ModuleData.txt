@@ -14,6 +14,22 @@ module.BiomeChanceData =
 	["TwilightGrass"] = 15
 }
 
+module.BiomeObjectDensity = 
+
+{
+	["NormalGrass"] = 4,
+	["ForestGrass"] = 15,
+	["AutumnGrass"] = 3,
+	["CrimsonGrass"] = 5,
+	["DesertGrass"] = 3,
+	["DirtGrass"] = 3,
+	["HolyGrass"] = 3,
+	["FairyGrass"] = 3,
+	["SnowyGrass"] = 4,
+	["StoneyGrass"] = 4,
+	["TwilightGrass"] = 4
+}
+	
 
 
 
