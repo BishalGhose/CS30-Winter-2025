@@ -1,17 +1,19 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
-	
-function colorOffsetPart(negativeOffset, positiveOffset, part)
+local BiomesFolder = ReplicatedStorage.Biomes
+
+
+function colorOffsetPart(part, negativeOffset, positiveOffset)
 	local colorOffset = math.random(negativeOffset, positiveOffset)
-	return Color3.fromRGB(math.clamp(part.Color.R*255 + colorOffset, 0 , 255), math.clamp(part.Color.G*255 + colorOffset, 0 , 255), math.clamp(part.Color.B*255 + colorOffset, 0 , 255))
+	part.Color = Color3.fromRGB(math.clamp(part.Color.R*255 + colorOffset, 0 , 255), math.clamp(part.Color.G*255 + colorOffset, 0 , 255), math.clamp(part.Color.B*255 + colorOffset, 0 , 255))
 end
 
 
 
 local module = {}
 
-function module.MakeMiniRock(chunkPart, biome, shape, heightDifference, scaleFactor)
+function module.makeMiniRock(chunkPart, biome, shape, heightDifference, scaleFactor)
 	local model = Instance.new("Model")
 	model.Parent = chunkPart
 	model.Name = shape.."Rock"
@@ -21,11 +23,11 @@ function module.MakeMiniRock(chunkPart, biome, shape, heightDifference, scaleFac
 
 	if shape == "normal" then ---------------------------------------------------------------------
 		for i = 1, math.random(2,3) do
-			local stud = ReplicatedStorage.Biomes[biome].Stud:Clone()
+			local stud = BiomesFolder[biome].Stud:Clone()
 			stud.Parent = model
 			stud.Position = stud.Position + Vector3.new(math.random(-700,700)/100, math.random(-500,500)/1000 + heightDifference, math.random(-700,700)/100)
 			stud.Size = stud.Size + Vector3.new(math.random(10,70)/10, math.random(10,30)/10, math.random(10,70)/10)
-			stud.Color = colorOffsetPart(-20,20,stud)
+			colorOffsetPart(stud, -20, 20)
 		end
 
 
@@ -35,11 +37,11 @@ function module.MakeMiniRock(chunkPart, biome, shape, heightDifference, scaleFac
 
 	elseif shape == "spikey" then ---------------------------------------------------------------------
 		for i = 1, math.random(3,4) do
-			local stud = ReplicatedStorage.Biomes[biome].Stud:Clone()
+			local stud = BiomesFolder[biome].Stud:Clone()
 			stud.Parent = model
 			stud.Position = stud.Position + Vector3.new(math.random(-300,300)/100, math.random(-100,800)/100, math.random(-300,300)/100)
 			stud.Size = stud.Size + Vector3.new(math.random(-15,15)/10, math.random(10,30), math.random(-15,15)/10)
-			stud.Color = colorOffsetPart(-35,15,stud)
+			colorOffsetPart(stud, -35, 15)
 		end
 
 
@@ -49,11 +51,11 @@ function module.MakeMiniRock(chunkPart, biome, shape, heightDifference, scaleFac
 
 	elseif shape == "flat" then
 		for i = 1, math.random(1,2) do
-			local stud = ReplicatedStorage.Biomes[biome].Stud:Clone()
+			local stud = BiomesFolder[biome].Stud:Clone()
 			stud.Parent = model
 			stud.Position = stud.Position + Vector3.new(math.random(-300,300)/100, math.random(-100,800)/100, math.random(-300,300)/100)
 			stud.Size = stud.Size + Vector3.new(math.random(130,280)/10, math.random(13,26)/10, math.random(130,280)/10)
-			stud.Color = colorOffsetPart(-35,15,stud)
+			colorOffsetPart(stud, -35, 15)
 		end
 
 
@@ -63,9 +65,9 @@ function module.MakeMiniRock(chunkPart, biome, shape, heightDifference, scaleFac
 	end
 end
 
+-------------------------------------------------------------------------------------------------------------------------------------
 
-
-function module.MakeCactus(chunkPart, biome)
+function module.makeCactus(chunkPart, biome)
 	local function updateCactusBorders(cactusPart, offset)
 		cactusPart.bordersidey.Size = Vector3.new(cactusPart.Size.X - offset, cactusPart.Size.Y + offset, cactusPart.Size.Z - offset)
 		cactusPart.bordersidex.Size = Vector3.new(cactusPart.Size.X + offset, cactusPart.Size.Y - offset, cactusPart.Size.Z - offset)
@@ -76,7 +78,7 @@ function module.MakeCactus(chunkPart, biome)
 	model.Parent = chunkPart
 	model.Name = "Cactus"
 
-	local mainCactusPart = ReplicatedStorage.Biomes["DesertGrass"].CactusPart:Clone()
+	local mainCactusPart = BiomesFolder["DesertGrass"].CactusPart:Clone()
 	mainCactusPart.Parent = model
 	mainCactusPart.Name = "MainCactusPart"
 
@@ -88,70 +90,111 @@ function module.MakeCactus(chunkPart, biome)
 	
 	
 	for i = 1,4 do
-		if math.random(1,3) == 1 then
+		if math.random(1,2) == 1 then
 			local startingYPos = mainCactusPart.Position.Y + math.random(0, mainCactusPart.Size.Y/4)
 		
-			local stem = ReplicatedStorage.Biomes["DesertGrass"].CactusPart:Clone()
+			local stem = BiomesFolder["DesertGrass"].CactusPart:Clone()
 			local stemModel = Instance.new("Model")
 			stemModel.Parent = mainCactusPart
 			stem.Parent = stemModel
 			stemModel.PrimaryPart = stem
 		
-			local upperStem = ReplicatedStorage.Biomes["DesertGrass"].CactusPart:Clone()
+			local upperStem = BiomesFolder["DesertGrass"].CactusPart:Clone()
 			local upperStemModel = Instance.new("Model")
 			upperStemModel.Parent = mainCactusPart
 			upperStem.Parent = upperStemModel
 			upperStemModel.PrimaryPart = upperStem
 			
 			local stemThickness = cactusThickness - 2*cactusThickness/5
-			local stemLength = cactusThickness + math.random(cactusThickness, cactusThickness*1.2)
-			upperStem.Size = Vector3.new(stemThickness, stemLength * math.random(20,60)/100, stemThickness)
+			local stemLength = cactusThickness * math.random(14,17)/10
+			upperStem.Size = Vector3.new(stemThickness, stemLength * math.random(50,80)/100, stemThickness)
 
-			local stemXPos = stem.Position.X
-			local stemZPos = stem.Position.Z
-			
+
+
 
 
 			if i == 1 then
 				stem.Size = Vector3.new(stemThickness, stemThickness, stemLength)
+				local upperStemOffset = stem.Size.Z/2 - upperStem.Size.Z/2
 				
-				stemModel:PivotTo(CFrame.new(Vector3.new(stemXPos, startingYPos, stemZPos + cactusThickness/2)))
-				upperStem:PivotTo(CFrame.new(Vector3.new(stemXPos, startingYPos + upperStem.Size.Y/2, stemZPos + stem.Size.Z/2)))
+				stemModel:PivotTo(CFrame.new(Vector3.new(stem.Position.X, startingYPos, stem.Position.Z + stemLength/2)))
+				upperStem:PivotTo(CFrame.new(Vector3.new(stem.Position.X, startingYPos + upperStem.Size.Y/2, stem.Position.Z + upperStemOffset)))
 			elseif i == 2 then
 				stem.Size = Vector3.new(stemThickness, stemThickness, stemLength)
+				local upperStemOffset = stem.Size.Z/2 - upperStem.Size.Z/2
 				
-				stemModel:PivotTo(CFrame.new(Vector3.new(stemXPos, startingYPos, stemZPos - cactusThickness/2)))
-				upperStem:PivotTo(CFrame.new(Vector3.new(stemXPos, startingYPos + upperStem.Size.Y/2, stemZPos - stem.Size.Z/2)))
+				stemModel:PivotTo(CFrame.new(Vector3.new(stem.Position.X, startingYPos, stem.Position.Z - stemLength/2)))
+				upperStem:PivotTo(CFrame.new(Vector3.new(stem.Position.X, startingYPos + upperStem.Size.Y/2, stem.Position.Z - upperStemOffset)))
 			elseif i == 3 then
 				stem.Size = Vector3.new(stemLength, stemThickness, stemThickness)
+				local upperStemOffset = stem.Size.X/2 - upperStem.Size.X/2
 
-				stemModel:PivotTo(CFrame.new(Vector3.new(stemXPos + cactusThickness/2, startingYPos, stemZPos)))
-				upperStem:PivotTo(CFrame.new(Vector3.new(stemXPos + stem.Size.X/2, startingYPos + upperStem.Size.Y/2, stemZPos)))
+				stemModel:PivotTo(CFrame.new(Vector3.new(stem.Position.X + stemLength/2, startingYPos, stem.Position.Z)))
+				upperStem:PivotTo(CFrame.new(Vector3.new(stem.Position.X + upperStemOffset, startingYPos + upperStem.Size.Y/2, stem.Position.Z)))
 			else
 				stem.Size = Vector3.new(stemLength, stemThickness, stemThickness)	
+				local upperStemOffset = stem.Size.X/2 - upperStem.Size.X/2
 
-				stemModel:PivotTo(CFrame.new(Vector3.new(stemXPos - cactusThickness/2, startingYPos, stemZPos)))
-				upperStem:PivotTo(CFrame.new(Vector3.new(stemXPos - stem.Size.X/2 , startingYPos + upperStem.Size.Y/2, stemZPos)))
+				stemModel:PivotTo(CFrame.new(Vector3.new(stem.Position.X - stemLength/2, startingYPos, stem.Position.Z)))
+				upperStem:PivotTo(CFrame.new(Vector3.new(stem.Position.X - upperStemOffset, startingYPos + upperStem.Size.Y/2, stem.Position.Z)))
 			end
 
 			updateCactusBorders(stem, .3)
 			updateCactusBorders(upperStem, .3)
 
-
-
 		end
 	end
 	
-
 	
 	local grass = chunkPart.Grass
 
-	model.PrimaryPart = model.MainCactusPart
-	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + cactusYSize/2, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
-	model:ScaleTo(((math.random(140,200)/100)^2))
+	model.PrimaryPart = mainCactusPart
+	model:ScaleTo(((math.random(110,170)/100)^2))
+	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + mainCactusPart.Size.Y/2, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
+end
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+function module.makeBamboo()
+
+	local random = math.random(5,10)
+	for abc = 1 , random do
+		local bamboo = game.ReplicatedStorage.bamboo:Clone()
+		bamboo.Parent = game.Workspace
+		bamboo.PrimaryPart  = bamboo.asd
+		bamboo:PivotTo(CFrame.new(Vector3.new(bamboo.PrimaryPart.Position.X , abc * 15 , bamboo.PrimaryPart.Position.Z)))
+	end
 end
 
 
+function module.makeDefaultTree(chunkPart, biome)
+	local model = Instance.new("Model")
+	model.Parent = chunkPart
+	model.Name = "Tree"
+	
+	local mainBranch = BiomesFolder[biome].Wood:Clone()
+	local thicknessSize = math.random(220,300)/100
+	local verticalSize = math.random(50,70)/5 + thicknessSize*2 
+	mainBranch.Size = Vector3.new(thicknessSize, verticalSize, thicknessSize)
+	mainBranch.Parent = model
 
+	for i = 1, math.random(5,6) do
+		local leaf = BiomesFolder[biome].TreeLeaf:Clone()
+		leaf.Parent = model
+		
+		leaf.Position = Vector3.new(mainBranch.Position.X + math.random(-300, 300)/100, mainBranch.Position.Y + mainBranch.Size.Y/2 + math.random(-100, 100)/100, mainBranch.Position.Z + math.random(-300, 300)/100)
+		leaf.Size = Vector3.new(math.random(300,500)/50, math.random(250,380)/50, math.random(300,500)/50)
+		colorOffsetPart(leaf, -5, 45)
+	end
+	
+	
+	local grass = chunkPart.Grass
+	model.PrimaryPart = mainBranch
+	model:ScaleTo(((math.random(110,170)/100)^2))
+	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + mainBranch.Size.Y/2, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
+end
 
 return module
+

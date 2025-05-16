@@ -29,27 +29,18 @@ function module.ReplaceBlock(part, GrassType)
 	GrassClone.Size = Vector3.new(part.Size.X, 1, part.Size.Z)
 	GrassClone.Position = Vector3.new(part.Position.X, part.Position.Y + part.Size.Y/2 + 0.5, part.Position.Z)
 
-	if GrassClone:FindFirstChild("Texture") then
-		local Texture = GrassClone:FindFirstChild("Texture")
-		local offsetColor2 = math.random(-15,15)/255
 
-		local red = math.clamp(Texture.Color3.R + offsetColor2, 0, 1)
-		local green = math.clamp(Texture.Color3.G + offsetColor2, 0, 1)
-		local blue = math.clamp(Texture.Color3.B + offsetColor2, 0, 1)
+	local offsetColor2 = math.random(-15,15)/255
 		
-		for i,v in GrassClone:GetChildren() do
-			v.Color3 = Color3.new(red, green, blue)
-		end
-	else
-		local offsetColor2 = math.random(-15,15)/255
-		
-		local red = math.clamp(GrassClone.Color.R + offsetColor2, 0, 1)
-		local green = math.clamp(GrassClone.Color.G + offsetColor2, 0, 1)
-		local blue = math.clamp(GrassClone.Color.B + offsetColor2, 0, 1)
-		GrassClone.Color = Color3.new(red, green, blue)
-	end
-
+	local red = math.clamp(GrassClone.Color.R + offsetColor2, 0, 1)
+	local green = math.clamp(GrassClone.Color.G + offsetColor2, 0, 1)
+	local blue = math.clamp(GrassClone.Color.B + offsetColor2, 0, 1)
+	GrassClone.Color = Color3.new(red, green, blue)
 end
+
+
+
+
 
 function module.MakeBiomeNoise(x, z, scale, increment, name, seed, part)
 
@@ -78,7 +69,6 @@ end
 
 
 function module.HeightNoise(x, z, size, scale, increment, seed1, part)
-
 	
 	local noiseLocation = math.noise((x + seed1) / (increment/2.5) * scale, (z + seed1) / (increment/2.5) * scale)
 	local normalized = noiseLocation + 1           
@@ -164,35 +154,4 @@ function module.MakeMap()
 		end
 	end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-return module
 

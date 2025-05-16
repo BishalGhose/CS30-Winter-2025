@@ -30,7 +30,9 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 900 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", 0, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", 0, 1)
+				elseif RNG > 500 then
+					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				end
 			end
 			
@@ -42,7 +44,9 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 980 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
+				elseif RNG > 600 then
+					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				end
 			end
 
@@ -53,7 +57,11 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 800 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -3, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -3, 1)
+				elseif RNG > 300 then
+					ProceduralFunctions.makeCactus(v, BiomeType)
+				elseif RNG > 100 then
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "flat", -3, math.random(10,20)/20)
 				end
 			end
 			
@@ -64,11 +72,11 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 500 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "spikey", 0, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "spikey", 0, 1)
 				elseif RNG > 400 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", 0, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", 0, 1)
 				elseif RNG > 200 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "flat", -3, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "flat", -3, 1)
 				end
 			end
 			
@@ -79,7 +87,9 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 850 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1.5)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1.5)
+				elseif RNG > 700 then
+					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				end
 			end
 			
@@ -90,7 +100,7 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 850 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
 				end
 			end
 			
@@ -101,7 +111,9 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 930 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
+				elseif RNG > 700 then
+					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				end
 			end
 			
@@ -112,7 +124,9 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 950 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -2, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
+				elseif RNG > 700 then
+					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				end
 			end
 			
@@ -123,7 +137,9 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 950 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -3, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -3, 1)
+				elseif RNG > 700 then
+					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				end
 			end
 			
@@ -134,7 +150,9 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 950 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -3, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -3, 1)
+				elseif RNG > 700 then
+					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				end
 			end
 			
@@ -145,30 +163,14 @@ function module.DecorateMap()
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
 				if RNG > 970 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", -4, 1)
-				end
-			end
-			
-		elseif BiomeType == "VolcanicGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.HolyGrass + math.random(0,1)
-
-
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-
-				if RNG > 800 then
-					ProceduralFunctions.MakeMiniRock(v, BiomeType, "normal", 0, 1)
+					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -4, 1)
+				elseif RNG > 700 then
+					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				end
 			end
 		end
 	end
 end
-
-
-function module.NormalGrassDecorate()
-	
-end
-
 
 
 return module
