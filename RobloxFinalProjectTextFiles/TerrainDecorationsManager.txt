@@ -35,6 +35,8 @@ function module.DecorateMap()
 					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				elseif RNG > 300 then
 					ProceduralFunctions.makeBasicBush(v, BiomeType)
+				elseif RNG > 200 then
+					ProceduralFunctions.makeBerryBush(v, BiomeType)
 				end
 			end	
 
@@ -52,6 +54,8 @@ function module.DecorateMap()
 					ProceduralFunctions.makeBamboo(v, BiomeType)
 				elseif RNG > 480 then
 					ProceduralFunctions.makeBasicBush(v, BiomeType)
+				elseif RNG > 350 then
+					ProceduralFunctions.makeBerryBush(v, BiomeType)
 				end
 			end
 
@@ -61,12 +65,18 @@ function module.DecorateMap()
 
 			for x = 1, amountOfObjects do
 				local RNG = math.random(1,1000)
-				if RNG > 800 then
+				if RNG > 850 then
 					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -3, 1)
-				elseif RNG > 300 then
+				elseif RNG > 770 then
+					ProceduralFunctions.makeOreBlock(v, BiomeType)
+				elseif RNG > 400 then
 					ProceduralFunctions.makeCactus(v, BiomeType)
-				elseif RNG > 100 then
+				elseif RNG > 200 then
 					ProceduralFunctions.makeMiniRock(v, BiomeType, "flat", -3, math.random(10,20)/20)
+				elseif RNG > 100 then
+					ProceduralFunctions.makeBasicBush(v, BiomeType)
+				else
+					ProceduralFunctions.makeBerryBush(v, BiomeType)
 				end
 			end
 			
@@ -82,6 +92,9 @@ function module.DecorateMap()
 					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", 0, 1)
 				elseif RNG > 200 then
 					ProceduralFunctions.makeMiniRock(v, BiomeType, "flat", -3, 1)
+				elseif RNG > 100 then
+					ProceduralFunctions.makeOreBlock(v, BiomeType)
+					
 				end
 			end
 			
@@ -97,6 +110,8 @@ function module.DecorateMap()
 					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				elseif RNG > 500 then
 					ProceduralFunctions.makeBasicBush(v, BiomeType)
+				elseif RNG > 380 then
+					ProceduralFunctions.makeBerryBush(v, BiomeType)
 				end
 			end
 			
@@ -108,6 +123,9 @@ function module.DecorateMap()
 				local RNG = math.random(1,1000)
 				if RNG > 850 then
 					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
+				elseif RNG > 700 then
+					ProceduralFunctions.makeOreBlock(v, BiomeType)
+
 				end
 			end
 			
@@ -123,6 +141,8 @@ function module.DecorateMap()
 					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				elseif RNG > 500 then
 					ProceduralFunctions.makeBasicBush(v, BiomeType)
+				elseif RNG > 380 then
+					ProceduralFunctions.makeBerryBush(v, BiomeType)
 				end
 			end
 			
@@ -138,6 +158,8 @@ function module.DecorateMap()
 					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				elseif RNG > 500 then
 					ProceduralFunctions.makeBasicBush(v, BiomeType)
+				elseif RNG > 380 then
+					ProceduralFunctions.makeBerryBush(v, BiomeType)
 				end
 			end
 			
@@ -153,6 +175,8 @@ function module.DecorateMap()
 					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				elseif RNG > 500 then
 					ProceduralFunctions.makeBasicBush(v, BiomeType)
+				elseif RNG > 380 then
+					ProceduralFunctions.makeBerryBush(v, BiomeType)
 				end
 			end
 			
@@ -168,6 +192,8 @@ function module.DecorateMap()
 					ProceduralFunctions.makeDefaultTree(v, BiomeType)
 				elseif RNG > 500 then
 					ProceduralFunctions.makeBasicBush(v, BiomeType)
+				elseif RNG > 380 then
+					ProceduralFunctions.makeBerryBush(v, BiomeType)
 				end
 			end
 			
@@ -189,8 +215,5 @@ end
 
 
 return module
-
-
-
 
 

@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 local BiomesFolder = ReplicatedStorage.Biomes
-
+local ModuleData= require(game.ServerStorage.ModuleData)
 
 
 
@@ -20,6 +20,61 @@ function studMaker(part, model, positionVector, sizeVector, bottomColorOffset, t
 	stud.Size = stud.Size + sizeVector
 	colorOffsetPart(stud, bottomColorOffset, topColorOffset)
 end
+
+function findListPos(number, pos, list)
+	if number <= list[pos] then
+		return 1
+	end
+
+	return 1 + findListPos(number - list[pos], pos + 1, list)
+end
+
+function makeBlockSpecs(part, lowerAmount, upperAmount, model, speckType, speckVariation)
+	local xSize = part.Size.X
+	local ySize = part.Size.Y
+	local zSize = part.Size.Z
+
+	for i = 1,  math.random(6,8) do
+		local side = math.random(0,1)
+		local axis = math.random(1,3)
+		local posX, posY, posZ
+
+		if axis == 1 then
+			posX = side == 0 and -xSize/2 or xSize/2
+			posY = -ySize/2 + math.random() * ySize
+			posZ = -zSize/2 + math.random() * zSize
+		elseif axis == 2 then
+			posX = -xSize/2 + math.random() * xSize
+			posY = ySize/2
+			posZ = -zSize/2 + math.random() * zSize
+		elseif axis == 3 then
+			posX = -xSize/2 + math.random() * xSize
+			posY = -ySize/2 + math.random() * ySize
+			posZ = side == 0 and -zSize/2 or zSize/2
+		end
+		
+		local speck
+		if speckType == "Ores" then
+			speck = ReplicatedStorage[speckType][speckVariation.."_Ore"]:Clone()
+			speck.Size *= math.random(100,170)/100
+		elseif speckType == "Berries" then
+			speck = ReplicatedStorage[speckType][speckVariation.."_Berry"]:Clone()
+		end
+
+		speck.Parent = model
+		speck.Position = Vector3.new(part.Position.X + posX, part.Position.Y + posY, part.Position.Z + posZ)
+
+	end
+end
+
+
+
+
+
+
+
+
+
 
 local module = {}
 
@@ -168,7 +223,7 @@ function module.makeCactus(chunkPart, biome)
 	
 	local grass = chunkPart.Grass
 	model.PrimaryPart = mainCactusPart
-	model:ScaleTo(((math.random(110,170)/100)^2))
+	model:ScaleTo(((math.random(90,140)/100)^2))
 	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + mainCactusPart.Size.Y/2, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
 end
 
@@ -239,11 +294,37 @@ function module.makeDefaultTree(chunkPart, biome)
 	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + trunk.Size.Y/2, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
 end
 
+function module.makePineConeTree(chunkPart, biome)
+	local model = Instance.new("Model")
+	model.Parent  = chunkPart
+
+	local trunk = ReplicatedStorage.Biomes[biome].Wood:Clone()
+	local leafLayers = math.random(5,7)
+
+	local startingSize
+	for i = 1 , leafLayers do
+		local leaf = ReplicatedStorage.Biomes[biome].TreeLeaf:Clone()
+		leaf.Position = Vector3.new(trunk.Position.X, trunk.Position.Y + i * 1.5, trunk.Position.Z)
+		leaf.Parent = model
+	end
+	
+	local grass = chunkPart.Grass
+	model.PrimaryPart = trunk
+	model.ScaleTo(((math.random(90, 120)/100)^2))
+	model.PivotTo(CFrame.new(Vector3.new(grass.Posistion.X + math.random(-grass.Size.X / 3, grass.Size.X / 3))))
+
+end
+
+
+
+
+
+
 
 function module.makeBasicBush(chunkPart, biome)
 	local model = Instance.new("Model")
 	model.Parent = chunkPart
-	model.Name = "BasicBush"
+	model.Name = "Basic_Bush"
 
 
 	for i=1, math.random(2,3) do
@@ -264,14 +345,88 @@ function module.makeBasicBush(chunkPart, biome)
 	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y , grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
 end
 
-function module.makePineConeTree(chunkPart, biome)
-	local model = Instance.new("Model")
-	model.Parent  = chunkPart
 
-	local trunk = ReplicatedStorage.Biomes[biome].Wood:Clone()
+
+
+
+
+function module.makeBerryBush(chunkPart, biome)
+	local berryChanceList = ModuleData.BerryBiomeChance[biome]
+	local summedNumber = 0
+
+	for i,v in berryChanceList do
+		summedNumber += v
+	end
+
+
+	local berryType = ModuleData.BerryNumber[findListPos(math.random(1, summedNumber), 1, berryChanceList)]
+
+	local model = Instance.new("Model")
+	model.Parent = chunkPart
+	model.Name = berryType.."_Berry_Bush"
+
+	local randomBushSize = Vector3.new(math.random(0,20)/10, math.random(0,20)/100, math.random(0,20)/10)
+
+	studMaker(
+		BiomesFolder[biome].Bush,
+		model,
+		Vector3.new(0,0,0),
+		randomBushSize,
+		-10,
+		40
+	)
+
+	local bush = model:GetChildren()[1]
+	makeBlockSpecs(bush, 6, 8, model, "Berries", berryType)
 	
 	
 	
+	local grass = chunkPart.Grass
+	model.PrimaryPart = model:GetChildren()[1]
+	local scale = (math.random(100,130)/100)^2
+	model:ScaleTo(scale)
+	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + (bush.Size.Y/2)*scale, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
 end
+
+
+function module.makeOreBlock(chunkPart, biome)
+	local oreChanceList = ModuleData.OreBiomeChance[biome]
+	local summedNumber = 0
+
+	for i,v in oreChanceList do
+		summedNumber += v
+	end
+
+	local oreType = ModuleData.OreNumber[findListPos(math.random(1, summedNumber), 1, oreChanceList)]
+
+	local model = Instance.new("Model")
+	model.Parent = chunkPart
+	model.Name = oreType.."_Ore"
+
+	local randomOreSize = Vector3.new(math.random(0,20)/10, math.random(0,20)/100, math.random(0,20)/10)
+
+	studMaker(
+		BiomesFolder[biome].Stud,
+		model,
+		Vector3.new(0,0,0),
+		randomOreSize,
+		-10,
+		40
+	)
+	
+	local stud = model:GetChildren()[1]
+	makeBlockSpecs(stud, 6, 8, model, "Ores", oreType)
+
+
+	local grass = chunkPart.Grass
+	model.PrimaryPart = model:GetChildren()[1]
+	local scale = (math.random(100,130)/100)^2
+	model:ScaleTo(scale)
+	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + (stud.Size.Y/2)*scale, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
+end
+
+
+
+
 
 return module
