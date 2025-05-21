@@ -1,17 +1,21 @@
 local module = {}
 
 module.BiomeChanceData =
-
+-- First value determines how rare the biome is to spawn (closer to 1 = exponentially rarer)
+-- Second value determines the size of the biome (smaller = exponentially bigger)
+-- The first value also lowers/biggers the size of the biome so the second value is in place to mitigate that
 {
-	["AutumnGrass"] = 10,
-	["CrimsonGrass"] = 20,
-	["DesertGrass"] = 1,
-	["DirtGrass"] = 4,
-	["HolyGrass"] = 25,
-	["FairyGrass"] = 12,
-	["SnowyGrass"] = 3,
-	["StoneyGrass"] = 1,
-	["TwilightGrass"] = 17,
+	["ForestGrass"]   = {.15, 5},
+	["StoneyGrass"]   = {.2, 9},
+	["DesertGrass"]   = {.25, 5},
+	["SnowyGrass"]    = {.4, 6},
+	["DirtGrass"]     = {.3, 6},
+	["AutumnGrass"]   = {.3, 4},
+	["FairyGrass"]    = {.32, 3.2},
+	["CrimsonGrass"]  = {.45, 2},
+	["HolyGrass"]     = {.5, 2},
+	["TwilightGrass"] = {.55, 2},
+	["DarkDimensionGrass"] = {.3, 4}
 }
 
 module.BiomeObjectDensity = 
@@ -19,15 +23,16 @@ module.BiomeObjectDensity =
 {
 	["NormalGrass"] = 4,
 	["ForestGrass"] = 15,
-	["AutumnGrass"] = 3,
+	["AutumnGrass"] = 4,
 	["CrimsonGrass"] = 5,
 	["DesertGrass"] = 5,
-	["DirtGrass"] = 3,
-	["HolyGrass"] = 3,
-	["FairyGrass"] = 3,
+	["DirtGrass"] = 4,
+	["HolyGrass"] = 4,
+	["FairyGrass"] = 4,
 	["SnowyGrass"] = 4,
-	["StoneyGrass"] = 6,
+	["StoneyGrass"] = 9,
 	["TwilightGrass"] = 4,
+	["DarkDimensionGrass"] = 4
 }
 	
 
@@ -38,7 +43,7 @@ module.BerryBiomeChance =
 	["ForestGrass"] = {0, 1000, 500, 300, 150, 70, 35, 0, 0, 0, 0, 0},
 	["AutumnGrass"] = {0, 500, 1500, 300, 150, 70, 35, 0, 5, 0, 10, 2},
 	["CrimsonGrass"] = {0, 100, 500, 1500, 150, 70, 35, 0, 20, 0, 4, 1}, 
-	["FairyGrass"] = {0, 100, 500, 1500, 150, 70, 35, 0, 20, 0, 20, 5}, 
+	["FairyGrass"] = {0, 100, 300, 300, 150, 70, 35, 1500, 20, 0, 20, 5}, 
 	["SnowyGrass"] = {0, 300, 300, 300, 150, 70, 50, 0, 20, 0, 5, 0},
 	["TwilightGrass"] = {0, 100, 100, 100, 150, 70, 100, 0, 20, 0, 20, 5},
 	["DesertGrass"] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -67,7 +72,6 @@ module.OreBiomeChance =
 {
 	["StoneyGrass"] = {0, 1000, 300, 200, 100, 50, 25, 10, 7, 5, 2},
 	["NormalGrass"] = {0, 1000, 400, 200, 100, 50, 25, 10, 5, 0, 0},
-	["DesertGrass"] = {300, 1000, 400, 200, 100, 50, 25, 10, 5, 0, 0},
 	["DirtGrass"] = {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
 }
 
@@ -94,3 +98,4 @@ module.OreNumber =
 
 
 return module
+

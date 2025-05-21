@@ -1,0 +1,24 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local localPlayer = Players.LocalPlayer
+local mouse = localPlayer:GetMouse()
+
+local CCF = require(game.StarterPlayer.StarterPlayerScripts.ClientCommonFunctions)
+
+
+
+
+
+
+
+mouse.Button1Down:Connect(function()
+	if CCF.checkBreakableHierarchy(mouse.Target) then
+		local hitPos = mouse.Hit.Position
+		
+		local tapPart = game.Workspace:WaitForChild("TapPart")
+		local attachment = tapPart:WaitForChild("Attachment")
+		local particle = attachment:WaitForChild("ParticleEmitter")
+		tapPart.Position = hitPos
+		particle:Emit(1)
+	end
+end)

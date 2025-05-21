@@ -1,0 +1,22 @@
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
+local screenGui = playerGui.ScreenGui
+
+
+
+
+
+
+
+--Make it so it displays a dark cover over UI when mouse is hovering
+local sellButton = script.Parent.ScreenGui.SellGUI.TextButton
+
+sellButton.MouseEnter:Connect(function()
+	sellButton.Parent:FindFirstChild("ShadowFrame").Visible = true
+end)
+
+sellButton.MouseLeave:Connect(function()
+	sellButton.Parent:FindFirstChild("ShadowFrame").Visible = false
+end)

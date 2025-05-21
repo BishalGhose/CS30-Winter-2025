@@ -1,0 +1,251 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollectionService = game:GetService("CollectionService")
+local ServerStorage = game:GetService("ServerStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+
+local BiomesFolder = ReplicatedStorage.Biomes
+local ModuleData = require(ServerStorage.ModuleData)
+
+
+
+
+local module = {}
+
+
+function module.getExponentialScale(rarity)
+	local u = math.random()
+	return 1 + 9 * (1 - u^rarity)
+end
+
+
+function module.roundDecimalPlaces(number, places)
+	if number % 1 == 0 then
+		return number
+	end
+
+	
+end
+
+function module.getBigNumber(lowestNumber, highestNumber)
+
+end
+
+function module.getRandomFloat(min, max)
+	return min + (math.random() * (max - min))
+end
+
+function module.colorOffsetPart(part, bottomOffset, topOffset)
+	local colorOffset = math.random(bottomOffset, topOffset)
+	part.Color = Color3.fromRGB(math.clamp(part.Color.R*255 + colorOffset, 0 , 255), math.clamp(part.Color.G*255 + colorOffset, 0 , 255), math.clamp(part.Color.B*255 + colorOffset, 0 , 255))
+end
+
+
+function module.studMaker(part, model, positionVector, sizeVector, bottomColorOffset, topColorOffset)
+	local stud = part:Clone()
+	stud.Parent = model
+	stud.Position = stud.Position + positionVector
+	stud.Size = stud.Size + sizeVector
+	module.colorOffsetPart(stud, bottomColorOffset, topColorOffset)
+	return stud
+end
+
+function module.findListPos(number, pos, list)
+	if number <= list[pos] then
+		return 1
+	end
+
+	return 1 + module.findListPos(number - list[pos], pos + 1, list)
+end
+
+function module.makePartModel(chunkPart, name)
+	local model = Instance.new("Model")
+	model.Parent = chunkPart
+	model.Name = name
+	CollectionService:AddTag(model, "BreakableModel")
+	return model
+end
+
+
+function module.makeTrunk(model, biome)
+	local trunk = BiomesFolder[biome].Wood:Clone()
+	local thicknessSize = module.getRandomFloat(2.2, 3)
+	local verticalSize = module.getRandomFloat(10, 14) + thicknessSize*2 
+	trunk.Size = Vector3.new(thicknessSize, verticalSize, thicknessSize)
+	trunk.Parent = model
+	return trunk, thicknessSize
+end
+
+
+function module.makeBlockSpecs(part, lowerAmount, upperAmount, model, speckType, speckVariation)
+	local xSize = part.Size.X
+	local ySize = part.Size.Y
+	local zSize = part.Size.Z
+
+
+	for side = 0, 1 do 
+		for axis = 1, 3 do
+			for amount = 1, math.random(1,2) do
+				local posX, posY, posZ
+
+				if axis == 1 then
+					posX = side == 0 and -9*xSize/20 or 9*xSize/20
+					posY = -ySize/3 + math.random() * 2*ySize/3
+					posZ = -zSize/3 + math.random() * 2*zSize/3
+				elseif axis == 2 then
+					posX = -xSize/3 + math.random() * 2*xSize/3
+					posY = 9*ySize/20
+					posZ = -zSize/3 + math.random() * 2*zSize/3
+				elseif axis == 3 then
+					posX = -xSize/3 + math.random() * 2*xSize/3
+					posY = -ySize/3 + math.random() * 2*ySize/3
+					posZ = side == 0 and -9*zSize/20 or 9*zSize/20
+				end
+
+				local speck
+				if speckType == "Ores" then
+					speck = ReplicatedStorage[speckType][speckVariation.."_Ore"]:Clone()
+					speck.Size *= module.getRandomFloat(1, 1.7)
+				elseif speckType == "Berries" then
+					speck = ReplicatedStorage[speckType][speckVariation.."_Berry"]:Clone()
+				end
+
+				speck.Parent = model
+				speck.Position = Vector3.new(part.Position.X + posX, part.Position.Y + posY, part.Position.Z + posZ)
+			end
+		end
+	end
+end
+
+
+
+function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeType, stemLengthMultiplier, branchChance, bottomYLimit)
+	local upperStemTable = {}
+	for i = 1,4 do
+		if math.random(1, branchChance) == 1 then
+			local startingYPos = trunk.Position.Y + module.getRandomFloat(bottomYLimit, trunk.Size.Y/4)
+
+			local stem = stemReferencePart:Clone()
+			stem.Parent = trunk
+
+			local upperStem = stemReferencePart:Clone()
+			upperStem.Parent = trunk
+
+			local stemThickness = trunkThickness - 2*trunkThickness/5
+			local stemLength = trunkThickness * module.getRandomFloat(1.4, 1.7) * stemLengthMultiplier
+			upperStem.Size = Vector3.new(stemThickness, stemLength * module.getRandomFloat(0.5, 0.8), stemThickness)
+
+
+
+			if i == 1 then
+				stem.Size = Vector3.new(stemThickness, stemThickness, stemLength)
+				local upperStemOffset = stem.Size.Z/2 - upperStem.Size.Z/2
+
+				stem:PivotTo(CFrame.new(Vector3.new(stem.Position.X, startingYPos, stem.Position.Z + stemLength/2)))
+				upperStem:PivotTo(CFrame.new(Vector3.new(stem.Position.X, startingYPos + upperStem.Size.Y/2, stem.Position.Z + upperStemOffset)))
+			elseif i == 2 then
+				stem.Size = Vector3.new(stemThickness, stemThickness, stemLength)
+				local upperStemOffset = stem.Size.Z/2 - upperStem.Size.Z/2
+
+				stem:PivotTo(CFrame.new(Vector3.new(stem.Position.X, startingYPos, stem.Position.Z - stemLength/2)))
+				upperStem:PivotTo(CFrame.new(Vector3.new(stem.Position.X, startingYPos + upperStem.Size.Y/2, stem.Position.Z - upperStemOffset)))
+			elseif i == 3 then
+				stem.Size = Vector3.new(stemLength, stemThickness, stemThickness)
+				local upperStemOffset = stem.Size.X/2 - upperStem.Size.X/2
+
+				stem:PivotTo(CFrame.new(Vector3.new(stem.Position.X + stemLength/2, startingYPos, stem.Position.Z)))
+				upperStem:PivotTo(CFrame.new(Vector3.new(stem.Position.X + upperStemOffset, startingYPos + upperStem.Size.Y/2, stem.Position.Z)))
+			else
+				stem.Size = Vector3.new(stemLength, stemThickness, stemThickness)	
+				local upperStemOffset = stem.Size.X/2 - upperStem.Size.X/2
+
+				stem:PivotTo(CFrame.new(Vector3.new(stem.Position.X - stemLength/2, startingYPos, stem.Position.Z)))
+				upperStem:PivotTo(CFrame.new(Vector3.new(stem.Position.X - upperStemOffset, startingYPos + upperStem.Size.Y/2, stem.Position.Z)))
+			end
+
+			table.insert(upperStemTable, upperStem)
+
+			if treeType == "Cactus" then
+				module.updateCactusBorders(stem, .3)
+				module.updateCactusBorders(upperStem, .3)
+			end
+		end
+	end
+	return upperStemTable
+end
+
+function module.runGoldenChance(model)
+	if math.random(1,128) == 1 then
+		CollectionService:AddTag(model, "Golden")
+		model.Parent = game.Workspace.GoldenParts
+		for i,v in model:GetDescendants() do
+			if v:IsA("Part") then
+				v.Color = Color3.fromRGB(255, 215, 0)
+				module.colorOffsetPart(v, -25, 25)
+			end
+			local goldenParticle = ReplicatedStorage.GoldenParticles:Clone()
+			goldenParticle.Parent = v
+			if v == model.PrimaryPart then
+				goldenParticle.Rate = 18
+			end
+		end
+		local goldenParticle = ReplicatedStorage.GoldenParticles:Clone()
+		goldenParticle.Parent = model.PrimaryPart
+	end
+end
+
+
+function module.runRainbowChance(model)
+	if math.random(1,128) == 1 then
+		if CollectionService:HasTag(model, "Golden") then
+			CollectionService:RemoveTag(model, "Golden")
+		end
+		CollectionService:AddTag(model, "Rainbow")
+		model.Parent = game.Workspace.RainbowParts
+		local rainbowParticle = ReplicatedStorage.RainbowParticles:Clone()
+		for i,v in model:GetDescendants() do
+			
+			local rainbowParticle = ReplicatedStorage.RainbowParticles:Clone()
+			rainbowParticle.Parent = v
+			if v == model.PrimaryPart then
+				rainbowParticle.Rate = 18
+			end
+		end
+	end
+end
+
+
+
+
+function module.finalizePosition(model, grass, scaleFactor, yOffset)
+	local scale = module.getExponentialScale(scaleFactor)
+	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + yOffset*scale , grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
+	model:ScaleTo(scale)
+
+	for i, v in model.PrimaryPart:GetTouchingParts() do
+		if v ~= model.Parent and v.Name == "ChunkBlock" then
+			local offset = math.sqrt(v:GetAttribute("yValue") - model.Parent:GetAttribute("yValue"))
+			local pivot = model:GetPivot()
+			local newPivot = pivot * CFrame.new(0, offset, 0)
+			model:PivotTo(newPivot)
+		end
+	end
+
+end
+
+
+function module.shakePart(model)
+	local randomDirection = module.getRandomFloat(-1,1)
+end
+
+
+function module.checkBreakableHierarchy(part)
+	if CollectionService:HasTag(part.Parent, "BreakablePart") or CollectionService:HasTag(part.Parent.Parent, "BreakablePart") then
+		return true
+	else
+		return false
+	end
+end
+
+return module

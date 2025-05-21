@@ -2,16 +2,21 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local MainModuleFunctions = require(ServerStorage.MainModuleFunctions)
 local TerrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
+local ProceduralFunctions = require(ServerStorage.ProceduralFunctions)
 
-MainModuleFunctions.MakeMap()
-TerrainDecorationsManager.DecorateMap()
+MainModuleFunctions.makeMap()
+TerrainDecorationsManager.decorateMap()
 
-while task.wait(30) do
-	for i,v in workspace.MainParts:GetChildren() do
-		v:Destroy()
-	end
+while task.wait(10) do
 	
-	MainModuleFunctions.MakeMap()
-	TerrainDecorationsManager.DecorateMap()
+	MainModuleFunctions.deleteMap()
+	
+	local MainModuleFunctions = require(ServerStorage.MainModuleFunctions)
+	local TerrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
+	local rainbowHighlight = ReplicatedStorage:FindFirstChild("RainbowHighlight")
+	rainbowHighlight.Parent = workspace.RainbowParts
+	MainModuleFunctions.makeMap()
+	TerrainDecorationsManager.decorateMap()
+	
 end
 

@@ -2,10 +2,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
+
+local CF = require(ServerStorage.CommonFunctions)
+
+
 local module = {}
 
 
-function module.ReplaceBlock(part, GrassType)
+function module.replaceBlock(part, GrassType)
 	for i,v in part:GetChildren() do
 		v:Destroy()
 	end
@@ -27,7 +31,7 @@ function module.ReplaceBlock(part, GrassType)
 	local GrassClone = GrassType.Grass:Clone()
 	GrassClone.Parent = part
 	GrassClone.Size = Vector3.new(part.Size.X, 1, part.Size.Z)
-	GrassClone.Position = Vector3.new(part.Position.X, part.Position.Y + part.Size.Y/2 + 0.5, part.Position.Z)
+	GrassClone.Position = Vector3.new(part.Position.X, part.Position.Y + part.Size.Y/2 + CF.getRandomFloat(0.45,0.5), part.Position.Z)
 
 
 	local offsetColor2 = math.random(-15,15)/255
@@ -42,60 +46,49 @@ end
 
 
 
-function module.MakeBiomeNoise(x, z, scale, increment, name, seed, part)
+function module.makeBiomeNoise(x, z, scale, increment, data, part)
 
 	if CollectionService:HasTag(part, "Water")  then
 		return
 	end
 	
-	
-	if name == "NormalGrass" then
-		local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
-		local Biomes = game.ReplicatedStorage.Biomes
+	local name = data[1]
+	local chanceData = data[2]
+	local seed = data[3]
 
-		if noiseLocation > -0.2 then
-			module.ReplaceBlock(part, Biomes.NormalGrass)
-		else
-			module.ReplaceBlock(part, Biomes.ForestGrass)
-		end
-	else
-		local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
-		if noiseLocation < -0.2 then
-			module.ReplaceBlock(part, game.ReplicatedStorage.Biomes[name])
-		end
+	
+	local noiseLocation = math.noise((x + seed) / (increment) * scale, (z + seed) / (increment) * scale)
+
+	if noiseLocation >= chanceData[1] then
+		module.replaceBlock(part, ReplicatedStorage.Biomes[name])
 	end
 end
 
 
 
-function module.HeightNoise(x, z, size, scale, increment, seed1, part)
+function module.makeHeightNoise(x, z, size, scale, increment, seed1, part)
 	
 	local noiseLocation = math.noise((x + seed1) / (increment/2.5) * scale, (z + seed1) / (increment/2.5) * scale)
 	local normalized = noiseLocation + 1           
 	local y = normalized * 100
+	
+	part:SetAttribute("yValue", y)
 
 	local middleValue = size/2
-
 	local center = Vector2.new(size/2, size/2)
 	local pos = Vector2.new(x, z)
-
 	local distFromCenter = (pos - center).Magnitude
 	local maxDist = (Vector2.new(0, 0) - center).Magnitude
 	local invertedDist = 1 - (distFromCenter / maxDist)
 	local yExtraSize = invertedDist * 500
 
 
-
-	if noiseLocation > 0.5 then
-		part.Size = Vector3.new(increment + math.random(increment/2), y + yExtraSize, increment + math.random(increment/2))
-	else
-		part.Size = Vector3.new(increment + math.random(increment*2), y + yExtraSize, increment + math.random(increment*2))
-	end
-
+	part.Size = Vector3.new(increment + math.random(increment*2), y + yExtraSize, increment + math.random(increment*2))
+	
 	local yMainPartLocation = y/2 - yExtraSize/2
 
 	
-	if noiseLocation < -0.3 then
+	if noiseLocation < -0.4 then
 		CollectionService:AddTag(part, "Water")
 		
 		part.Material = Enum.Material.Sand
@@ -105,7 +98,7 @@ function module.HeightNoise(x, z, size, scale, increment, seed1, part)
 		local waterBlock = ReplicatedStorage.WaterBlock:Clone()
 		waterBlock.Parent = part
 
-		local ySize = 70 - (yMainPartLocation + part.Size.Y/2)
+		local ySize = 60 - (yMainPartLocation + part.Size.Y/2)
 		waterBlock.Size = Vector3.new(part.Size.X, ySize, part.Size.Z)
 		local yPosition = yMainPartLocation + part.Size.Y/2 + ySize/2
 		waterBlock.Position = Vector3.new(x, yPosition, z)
@@ -120,43 +113,56 @@ function module.HeightNoise(x, z, size, scale, increment, seed1, part)
 	part.Parent = workspace.MainParts
 end
 	
-function module.MakeMap()
+function module.makeMap()
 	local ModuleData = require(ServerStorage.ModuleData)
 	
-	local size = 1536
-	local scale = 0.02
+	local size = 768
+	local heightScale = CF.getRandomFloat(.020, .028)
+	local biomeScale = 0.0185
 	local increment = 64
 	local seed = math.random(1,100000000)
 
 	
-	local listOfValidBiomes = {
-		{"NormalGrass", math.random(1,100000000)}
-	}
+	local listOfBiomes = {}
 	
-	for i,v in ModuleData.BiomeChanceData do
-		if math.random(1,v) == v then
-			table.insert(listOfValidBiomes, {i, math.random(1,100000000)})
-		end
+	for biomeName, chanceData in ModuleData.BiomeChanceData do
+		table.insert(listOfBiomes, {biomeName, chanceData, math.random(1,100000000)})
 	end
-	
-		
 	
 	for x = increment, size, increment do
 		for z = increment, size, increment do
-			local part = ReplicatedStorage.NormalPart:Clone()
+			local part = ReplicatedStorage.ChunkBlock:Clone()
 
-			module.HeightNoise(x, z, size, scale, increment, seed, part)
+			module.makeHeightNoise(x, z, size, heightScale, increment, seed, part)
 			
 
-			for i,v in listOfValidBiomes do
-				module.MakeBiomeNoise(x, z, scale, increment, v[1], v[2], part)
+			for i, data in listOfBiomes do
+				module.makeBiomeNoise(x, z, biomeScale * data[2][2], increment, data, part)
 			end
+		end
+	end 
+
+	for i,v in workspace.MainParts:GetChildren() do
+
+		if #v:GetTags() == 0 then
+			
+			module.replaceBlock(v, ReplicatedStorage.Biomes.NormalGrass)
+			CollectionService:AddTag(v, "NormalGrass")
 		end
 	end
 end
 
 
-
+function module.deleteMap()
+	workspace.RainbowParts.RainbowHighlight.Parent = ReplicatedStorage
+	local folders = {workspace.MainParts, workspace.RainbowParts, workspace.GoldenParts}
+	for i, v in folders do
+		for x, y in v:GetChildren() do
+			y:Destroy()
+		end
+	end
+end
 
 return module
+
 
