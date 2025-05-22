@@ -1,22 +1,53 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
-local MainModuleFunctions = require(ServerStorage.MainModuleFunctions)
-local TerrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
-local ProceduralFunctions = require(ServerStorage.ProceduralFunctions)
+local Players = game:GetService("Players")
+local DataStoreService = game:GetService("DataStoreService")
+local ServerScriptService = game:GetService("ServerScriptService")
 
-MainModuleFunctions.makeMap()
-TerrainDecorationsManager.decorateMap()
+local tableOfOccupiedPlots = {}
 
-while task.wait(10) do
-	
-	MainModuleFunctions.deleteMap()
-	
-	local MainModuleFunctions = require(ServerStorage.MainModuleFunctions)
-	local TerrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
+local mainModuleFunctions = require(ServerStorage.MainModuleFunctions)
+local terrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
+local proceduralFunctions = require(ServerStorage.ProceduralFunctions)
+local playerData = require(ServerScriptService.PlayerData)
+
+mainModuleFunctions.makeMap()
+terrainDecorationsManager.decorateMap()
+
+
+
+for i=1, 4 do
+	table.insert(tableOfOccupiedPlots, "Open")
+end
+
+
+Players.PlayerAdded:Connect(function(player)
+	local playerId = Players:GetUserIdFromNameAsync(player.Name)
+	local playerNumber = Instance.new("NumberValue")
+	playerNumber.Parent = player
+	playerNumber.Name = "PlayerNumber"
+
+	for i,v in ipairs(tableOfOccupiedPlots) do
+		if v == "Open" then
+			playerNumber.Value = i
+			v = "Closed"
+		end
+	end
+
+	local playerPlotNumber = playerNumber.Value
+
 	local rainbowHighlight = ReplicatedStorage:FindFirstChild("RainbowHighlight")
 	rainbowHighlight.Parent = workspace.RainbowParts
-	MainModuleFunctions.makeMap()
-	TerrainDecorationsManager.decorateMap()
-	
-end
+	mainModuleFunctions.makeMap(playerPlotNumber)
+	terrainDecorationsManager.decorateMap(playerPlotNumber)
+end)
+
+
+
+Players.PlayerRemoving:Connect(function(player)
+	local playerPlotNumber = player.PlayerNumber.Value
+	mainModuleFunctions.deleteMap(4)
+
+	tableOfOccupiedPlots[player.PlayerNumber.Value] = "Open" 
+end)
 

@@ -12,7 +12,8 @@ local CCF = require(game.StarterPlayer.StarterPlayerScripts.ClientCommonFunction
 
 
 mouse.Button1Down:Connect(function()
-	if CCF.checkBreakableHierarchy(mouse.Target) then
+	local model = CCF.checkBreakableHierarchy(mouse.Target)
+	if model then
 		local hitPos = mouse.Hit.Position
 		
 		local tapPart = game.Workspace:WaitForChild("TapPart")
@@ -20,5 +21,12 @@ mouse.Button1Down:Connect(function()
 		local particle = attachment:WaitForChild("ParticleEmitter")
 		tapPart.Position = hitPos
 		particle:Emit(1)
+		CCF.shakeModel(model)
+
+		CCF.breakModel(model)
+ 	 	print("ranbreakmodel")
 	end
 end)
+
+
+

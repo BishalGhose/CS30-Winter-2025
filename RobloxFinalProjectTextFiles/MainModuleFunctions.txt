@@ -48,6 +48,8 @@ end
 
 function module.makeBiomeNoise(x, z, scale, increment, data, part)
 
+
+
 	if CollectionService:HasTag(part, "Water")  then
 		return
 	end
@@ -66,7 +68,7 @@ end
 
 
 
-function module.makeHeightNoise(x, z, size, scale, increment, seed1, part)
+function module.makeHeightNoise(x, z, scale, increment, seed1, part)
 	
 	local noiseLocation = math.noise((x + seed1) / (increment/2.5) * scale, (z + seed1) / (increment/2.5) * scale)
 	local normalized = noiseLocation + 1           
@@ -74,18 +76,10 @@ function module.makeHeightNoise(x, z, size, scale, increment, seed1, part)
 	
 	part:SetAttribute("yValue", y)
 
-	local middleValue = size/2
-	local center = Vector2.new(size/2, size/2)
-	local pos = Vector2.new(x, z)
-	local distFromCenter = (pos - center).Magnitude
-	local maxDist = (Vector2.new(0, 0) - center).Magnitude
-	local invertedDist = 1 - (distFromCenter / maxDist)
-	local yExtraSize = invertedDist * 500
 
-
-	part.Size = Vector3.new(increment + math.random(increment*2), y + yExtraSize, increment + math.random(increment*2))
+	part.Size = Vector3.new(increment + math.random(increment*2), y, increment + math.random(increment*2))
 	
-	local yMainPartLocation = y/2 - yExtraSize/2
+	local yMainPartLocation = y/2
 
 	
 	if noiseLocation < -0.4 then
@@ -102,8 +96,7 @@ function module.makeHeightNoise(x, z, size, scale, increment, seed1, part)
 		waterBlock.Size = Vector3.new(part.Size.X, ySize, part.Size.Z)
 		local yPosition = yMainPartLocation + part.Size.Y/2 + ySize/2
 		waterBlock.Position = Vector3.new(x, yPosition, z)
-		local difference2 = math.random(-15,15)
-		waterBlock.Color = Color3.fromRGB(math.clamp(waterBlock.Color.R*255 + difference2, 0, 255), waterBlock.Color.G*255 + difference2,waterBlock.Color.B*255 + difference2)
+		CF.colorOffsetPart(waterBlock, -15, 15)
 	end
 
 
@@ -113,36 +106,49 @@ function module.makeHeightNoise(x, z, size, scale, increment, seed1, part)
 	part.Parent = workspace.MainParts
 end
 	
-function module.makeMap()
+function module.makeMap(plotNumber, tableOfCoords)
 	local ModuleData = require(ServerStorage.ModuleData)
 	
-	local size = 768
 	local heightScale = CF.getRandomFloat(.020, .028)
 	local biomeScale = 0.0185
-	local increment = 64
 	local seed = math.random(1,100000000)
+	local size = 768
+	local increment = 64
 
-	
 	local listOfBiomes = {}
-	
 	for biomeName, chanceData in ModuleData.BiomeChanceData do
 		table.insert(listOfBiomes, {biomeName, chanceData, math.random(1,100000000)})
 	end
+
+	local plotOffsetX, plotOffsetZ
+	if plotNumber == 1 then
+		plotOffsetX = size/2
+		plotOffsetZ = size/2
+	elseif plotNumber == 2 then
+		plotOffsetX = -size/2
+		plotOffsetZ = size/2
+	elseif plotNumber == 3 then
+		plotOffsetX = size/2
+		plotOffsetZ = -size/2
+	elseif plotNumber == 4 then
+		plotOffsetX = -size/2
+		plotOffsetZ = -size/2
+	end
+
+	for i,v in tableOfCoords do
+		local part = ReplicatedStorage.ChunkBlock:Clone()
+		local x = v[1] * 64 + plotOffsetX
+		local z = v[2] * 64 + plotOffsetZ
+		module.makeHeightNoise(x, z, heightScale, increment, seed, part)
 	
-	for x = increment, size, increment do
-		for z = increment, size, increment do
-			local part = ReplicatedStorage.ChunkBlock:Clone()
-
-			module.makeHeightNoise(x, z, size, heightScale, increment, seed, part)
-			
-
-			for i, data in listOfBiomes do
-				module.makeBiomeNoise(x, z, biomeScale * data[2][2], increment, data, part)
-			end
+		for i, data in listOfBiomes do
+			module.makeBiomeNoise(x, z, biomeScale * data[2][2], increment, data, part)
 		end
-	end 
+	end
+	
 
-	for i,v in workspace.MainParts:GetChildren() do
+
+	for i,v in workspace.Plots["Plot"..tostring(plotNumber)]:GetChildren() do
 
 		if #v:GetTags() == 0 then
 			
@@ -153,7 +159,7 @@ function module.makeMap()
 end
 
 
-function module.deleteMap()
+function module.deleteMap(plotNumber)
 	workspace.RainbowParts.RainbowHighlight.Parent = ReplicatedStorage
 	local folders = {workspace.MainParts, workspace.RainbowParts, workspace.GoldenParts}
 	for i, v in folders do

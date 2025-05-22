@@ -5,8 +5,8 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 
-local BiomesFolder = ReplicatedStorage.Biomes
-local ModuleData = require(ServerStorage.ModuleData)
+local biomesFolder = ReplicatedStorage.Biomes
+local moduleData = require(ServerStorage.ModuleData)
 
 
 
@@ -69,7 +69,7 @@ end
 
 
 function module.makeTrunk(model, biome)
-	local trunk = BiomesFolder[biome].Wood:Clone()
+	local trunk = biomesFolder[biome].Wood:Clone()
 	local thicknessSize = module.getRandomFloat(2.2, 3)
 	local verticalSize = module.getRandomFloat(10, 14) + thicknessSize*2 
 	trunk.Size = Vector3.new(thicknessSize, verticalSize, thicknessSize)
@@ -218,16 +218,22 @@ end
 
 
 
-function module.finalizePosition(model, grass, scaleFactor, yOffset)
+function module.finalizePosition(model, grass, scaleFactor, yOffset, rotationMultiplier)
 	local scale = module.getExponentialScale(scaleFactor)
-	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + yOffset*scale , grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
+	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + module.getRandomFloat(-grass.Size.X*0.4, grass.Size.X*0.4), grass.Position.Y + yOffset*scale , grass.Position.Z + module.getRandomFloat(-grass.Size.Z*0.4, grass.Size.Z*0.4))))
 	model:ScaleTo(scale)
 
 	for i, v in model.PrimaryPart:GetTouchingParts() do
 		if v ~= model.Parent and v.Name == "ChunkBlock" then
 			local offset = math.sqrt(v:GetAttribute("yValue") - model.Parent:GetAttribute("yValue"))
 			local pivot = model:GetPivot()
-			local newPivot = pivot * CFrame.new(0, offset, 0)
+			local newPivot
+
+			if rotationMultiplier then
+				newPivot = pivot * CFrame.new(0, offset, 0) * CFrame.Angles(0, math.rad(90 * rotationMultiplier), 0)
+			else
+				newPivot = pivot * CFrame.new(0, offset, 0)
+			end
 			model:PivotTo(newPivot)
 		end
 	end
@@ -248,4 +254,32 @@ function module.checkBreakableHierarchy(part)
 	end
 end
 
+
+function module.makeSavanahLeaf(model, biome, position)
+	
+	local referenceLeaf = biomesFolder[biome].TreeLeaf
+	local mainLeaf = referenceLeaf:Clone()
+	local mainLeafSize = module.getRandomFloat(20, 25)
+	mainLeaf.Parent = model
+	mainLeaf.Size = Vector3.new(mainLeafSize, module.getRandomFloat(4,5), mainLeafSize)
+	mainLeaf.Position = position
+	module.colorOffsetPart(mainLeaf, -25, 25)
+
+	
+	local subLeaf = referenceLeaf:Clone()
+	local subLeafSize = module.getRandomFloat(18, 22)
+	subLeaf.Parent = model
+	subLeaf.Size = Vector3.new(mainLeafSize/1.5, module.getRandomFloat(4,5), mainLeafSize/1.5)
+	subLeaf.Position = position + Vector3.new(0, mainLeaf.Size.Y/2, 0)
+	module.colorOffsetPart(subLeaf, -25, 25)
+end
+
+
+
+
+
+
+
+
 return module
+
