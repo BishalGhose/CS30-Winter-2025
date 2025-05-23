@@ -4,21 +4,40 @@ local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local tableOfOccupiedPlots = {}
-
 local mainModuleFunctions = require(ServerStorage.MainModuleFunctions)
 local terrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
 local proceduralFunctions = require(ServerStorage.ProceduralFunctions)
 local playerData = require(ServerScriptService.PlayerData)
-
-mainModuleFunctions.makeMap()
-terrainDecorationsManager.decorateMap()
-
-
+local plots = workspace.Plots
+local tableOfOccupiedPlots = {}
 
 for i=1, 4 do
 	table.insert(tableOfOccupiedPlots, "Open")
 end
+
+local tableOfTPLocations = 
+{
+	["1"] = Vector3.new(128, 120, 128),
+	["2"] = Vector3.new(128, 120, -128),
+	["3"] = Vector3.new(-128, 120, -128),
+	["4"] = Vector3.new(-128, 120, 128)
+}
+
+for i,v in plots:GetChildren() do
+	local plotNumber = string.sub(v.Name, -1)
+	v["TeleportPart"..plotNumber].Touched:Connect(function(touchedPart)
+		if tableOfOccupiedPlots[tonumber(plotNumber)] == "Closed" then
+			local playerCharacter = touchedPart.Parent
+			if playerCharacter:FindFirstChild("Humanoid") then
+				playerCharacter:PivotTo(CFrame.new(tableOfTPLocations[plotNumber]))
+			end
+		end
+	end)
+end
+
+
+
+
 
 
 Players.PlayerAdded:Connect(function(player)
@@ -27,18 +46,23 @@ Players.PlayerAdded:Connect(function(player)
 	playerNumber.Parent = player
 	playerNumber.Name = "PlayerNumber"
 
+	print(tableOfOccupiedPlots)
 	for i,v in ipairs(tableOfOccupiedPlots) do
+		print(i, v)
 		if v == "Open" then
 			playerNumber.Value = i
-			v = "Closed"
+			tableOfOccupiedPlots[i] = "Closed"
+			break
 		end
 	end
-
+	
 	local playerPlotNumber = playerNumber.Value
+	local playerPlot = workspace.Plots["Plot"..tostring(playerPlotNumber)]
+	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = player.Name.."'s Plot"
 
-	local rainbowHighlight = ReplicatedStorage:FindFirstChild("RainbowHighlight")
-	rainbowHighlight.Parent = workspace.RainbowParts
-	mainModuleFunctions.makeMap(playerPlotNumber)
+	
+
+	mainModuleFunctions.makeMap(playerPlotNumber, {{1,1}, {1,2}, {2,1}, {2,2}, {3,3}, {4,3}})
 	terrainDecorationsManager.decorateMap(playerPlotNumber)
 end)
 
@@ -46,8 +70,12 @@ end)
 
 Players.PlayerRemoving:Connect(function(player)
 	local playerPlotNumber = player.PlayerNumber.Value
-	mainModuleFunctions.deleteMap(4)
+	local playerPlot = workspace.Plots["Plot"..tostring(playerPlotNumber)]
+	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = "Empty Plot"
+
+	mainModuleFunctions.deleteMap(playerPlotNumber)
 
 	tableOfOccupiedPlots[player.PlayerNumber.Value] = "Open" 
 end)
+
 
