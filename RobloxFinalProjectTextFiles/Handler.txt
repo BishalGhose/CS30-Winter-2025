@@ -7,9 +7,15 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local mainModuleFunctions = require(ServerStorage.MainModuleFunctions)
 local terrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
 local proceduralFunctions = require(ServerStorage.ProceduralFunctions)
-local playerData = require(ServerScriptService.PlayerData)
+local playerData = require(ReplicatedStorage.PlayerData)
 local plots = workspace.Plots
 local tableOfOccupiedPlots = {}
+local remoteEvents = ReplicatedStorage.RemoteEvents
+
+
+
+
+
 
 for i=1, 4 do
 	table.insert(tableOfOccupiedPlots, "Open")
@@ -17,10 +23,10 @@ end
 
 local tableOfTPLocations = 
 {
-	["1"] = Vector3.new(128, 120, 128),
-	["2"] = Vector3.new(128, 120, -128),
-	["3"] = Vector3.new(-128, 120, -128),
-	["4"] = Vector3.new(-128, 120, 128)
+	["1"] = Vector3.new(128, 140, 128),
+	["2"] = Vector3.new(128, 140, -128),
+	["3"] = Vector3.new(-128, 140, -128),
+	["4"] = Vector3.new(-128, 140, 128)
 }
 
 for i,v in plots:GetChildren() do
@@ -42,9 +48,10 @@ end
 
 Players.PlayerAdded:Connect(function(player)
 	local playerId = Players:GetUserIdFromNameAsync(player.Name)
+	
 	local playerNumber = Instance.new("NumberValue")
 	playerNumber.Parent = player
-	playerNumber.Name = "PlayerNumber"
+	playerNumber.Name = "PlotNumber"
 
 	print(tableOfOccupiedPlots)
 	for i,v in ipairs(tableOfOccupiedPlots) do
@@ -60,22 +67,32 @@ Players.PlayerAdded:Connect(function(player)
 	local playerPlot = workspace.Plots["Plot"..tostring(playerPlotNumber)]
 	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = player.Name.."'s Plot"
 
-	
+	player.CharacterAdded:Connect(function(character)
+		local tool = game.ReplicatedStorage:WaitForChild("MyTool"):Clone()
+		tool:SetPrimaryPartCFrame(character:GetPivot())
 
-	mainModuleFunctions.makeMap(playerPlotNumber, {{1,1}, {1,2}, {2,1}, {2,2}, {3,3}, {4,3}})
+		tool.Parent = player:WaitForChild("Backpack")
+	end)
+
+	playerData[playerId] = {}
+	local playerDataTable = playerData[playerId]
+	playerDataTable["OwnedChunks"] = {{1,1}, {1,2}, {2,1}, {2,2}, {5,5}, {4,5}}
+	print(playerDataTable)
+	remoteEvents.UpdateClientData:FireClient(player, playerId, playerData[playerId])
+	
+	mainModuleFunctions.makeMap(playerPlotNumber, playerId, playerDataTable["OwnedChunks"])
 	terrainDecorationsManager.decorateMap(playerPlotNumber)
 end)
 
 
 
 Players.PlayerRemoving:Connect(function(player)
-	local playerPlotNumber = player.PlayerNumber.Value
+	local playerPlotNumber = player.PlotNumber.Value
 	local playerPlot = workspace.Plots["Plot"..tostring(playerPlotNumber)]
 	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = "Empty Plot"
 
 	mainModuleFunctions.deleteMap(playerPlotNumber)
 
-	tableOfOccupiedPlots[player.PlayerNumber.Value] = "Open" 
+	tableOfOccupiedPlots[player.PlotNumber.Value] = "Open" 
 end)
-
 

@@ -1,0 +1,76 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local CollectionService = game:GetService("CollectionService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local localPlayer = Players.LocalPlayer
+local mouse = localPlayer:GetMouse()
+local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local plots = workspace:WaitForChild("Plots")
+local importantValues = ReplicatedStorage:WaitForChild("ImportantValues")
+local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
+
+
+
+local module = {}
+
+
+function module.displayBuyPlots()
+	print("ran")
+	local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
+	local playerData = require(ReplicatedStorage.PlayerData)[Players:GetUserIdFromNameAsync(localPlayer.Name)]
+	local coordinatesTable = playerData["OwnedChunks"]
+	local buyCoordinates = {}
+
+	local function checkCoordinates(coord)
+		for i,v in coordinatesTable do
+			if coord[1] == v[1] and coord[2] == v[2] then
+				return false
+			end
+		end
+		for i,v in buyCoordinates do
+			if coord[1] == v[1] and coord[2] == v[2] then
+				return false
+			end
+		end
+		return true
+	end
+
+	for i,v in coordinatesTable do
+		local downOffset = 1
+		local leftOffset = 1
+		if v[1] == 1 then
+			downOffset = 0 
+		end
+		if v[2] == 1 then
+			leftOffset = 0
+		end
+
+		local offsetCoords = 
+			{
+				{v[1] + 1, v[2]},
+				{v[1], v[2] + 1},
+				{v[1] - downOffset, v[2]},
+				{v[1], v[2] - leftOffset}
+			}
+
+		for i,v in offsetCoords do
+			if checkCoordinates(v) then
+				table.insert(buyCoordinates, v)
+			end
+		end
+
+	end
+
+	for i,v in buyCoordinates do
+		local x, z = RF.coordinateScale(importantValues:WaitForChild("Increment").Value, plotNumber, v)
+		local buyPlotUI = ReplicatedStorage:WaitForChild("BuyPlotUI"):Clone()
+		print("hi,", x, z)
+		buyPlotUI.Parent = plots:WaitForChild("Plot"..tostring(plotNumber)):WaitForChild("BuyUIFolder")
+		buyPlotUI.Position = Vector3.new(x, 140, z)
+	end
+end
+
+

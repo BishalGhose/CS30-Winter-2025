@@ -7,7 +7,7 @@ local TweenService = game:GetService("TweenService")
 
 local biomesFolder = ReplicatedStorage.Biomes
 local moduleData = require(ServerStorage.ModuleData)
-
+local RF = require(ReplicatedStorage.ReplicatedFunctions)
 
 
 
@@ -17,23 +17,6 @@ local module = {}
 function module.getExponentialScale(rarity)
 	local u = math.random()
 	return 1 + 9 * (1 - u^rarity)
-end
-
-
-function module.roundDecimalPlaces(number, places)
-	if number % 1 == 0 then
-		return number
-	end
-
-	
-end
-
-function module.getBigNumber(lowestNumber, highestNumber)
-
-end
-
-function module.getRandomFloat(min, max)
-	return min + (math.random() * (max - min))
 end
 
 function module.colorOffsetPart(part, bottomOffset, topOffset)
@@ -70,8 +53,8 @@ end
 
 function module.makeTrunk(model, biome)
 	local trunk = biomesFolder[biome].Wood:Clone()
-	local thicknessSize = module.getRandomFloat(2.2, 3)
-	local verticalSize = module.getRandomFloat(10, 14) + thicknessSize*2 
+	local thicknessSize = RF.getRandomFloat(2.2, 3)
+	local verticalSize = RF.getRandomFloat(10, 14) + thicknessSize*2 
 	trunk.Size = Vector3.new(thicknessSize, verticalSize, thicknessSize)
 	trunk.Parent = model
 	return trunk, thicknessSize
@@ -106,7 +89,7 @@ function module.makeBlockSpecs(part, lowerAmount, upperAmount, model, speckType,
 				local speck
 				if speckType == "Ores" then
 					speck = ReplicatedStorage[speckType][speckVariation.."_Ore"]:Clone()
-					speck.Size *= module.getRandomFloat(1, 1.7)
+					speck.Size *= RF.getRandomFloat(1, 1.7)
 				elseif speckType == "Berries" then
 					speck = ReplicatedStorage[speckType][speckVariation.."_Berry"]:Clone()
 				end
@@ -124,7 +107,7 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 	local upperStemTable = {}
 	for i = 1,4 do
 		if math.random(1, branchChance) == 1 then
-			local startingYPos = trunk.Position.Y + module.getRandomFloat(bottomYLimit, trunk.Size.Y/4)
+			local startingYPos = trunk.Position.Y + RF.getRandomFloat(bottomYLimit, trunk.Size.Y/4)
 
 			local stem = stemReferencePart:Clone()
 			stem.Parent = trunk
@@ -133,8 +116,8 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 			upperStem.Parent = trunk
 
 			local stemThickness = trunkThickness - 2*trunkThickness/5
-			local stemLength = trunkThickness * module.getRandomFloat(1.4, 1.7) * stemLengthMultiplier
-			upperStem.Size = Vector3.new(stemThickness, stemLength * module.getRandomFloat(0.5, 0.8), stemThickness)
+			local stemLength = trunkThickness * RF.getRandomFloat(1.4, 1.7) * stemLengthMultiplier
+			upperStem.Size = Vector3.new(stemThickness, stemLength * RF.getRandomFloat(0.5, 0.8), stemThickness)
 
 
 
@@ -175,38 +158,36 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 	return upperStemTable
 end
 
-function module.runGoldenChance(model)
+function module.runGoldenChance(model, plotNumber)
 	if math.random(1,128) == 1 then
 		CollectionService:AddTag(model, "Golden")
-		model.Parent = game.Workspace.GoldenParts
+		model.Parent = workspace.Plots["Plot"..tostring(plotNumber)].GoldenParts
 		for i,v in model:GetDescendants() do
 			if v:IsA("Part") then
 				v.Color = Color3.fromRGB(255, 215, 0)
 				module.colorOffsetPart(v, -25, 25)
 			end
-			local goldenParticle = ReplicatedStorage.GoldenParticles:Clone()
+			local goldenParticle = ReplicatedStorage.Particles.GoldenParticles:Clone()
 			goldenParticle.Parent = v
 			if v == model.PrimaryPart then
 				goldenParticle.Rate = 18
 			end
 		end
-		local goldenParticle = ReplicatedStorage.GoldenParticles:Clone()
-		goldenParticle.Parent = model.PrimaryPart
 	end
 end
 
 
-function module.runRainbowChance(model)
+function module.runRainbowChance(model, plotNumber)
 	if math.random(1,128) == 1 then
 		if CollectionService:HasTag(model, "Golden") then
 			CollectionService:RemoveTag(model, "Golden")
 		end
 		CollectionService:AddTag(model, "Rainbow")
-		model.Parent = game.Workspace.RainbowParts
-		local rainbowParticle = ReplicatedStorage.RainbowParticles:Clone()
+		model.Parent = workspace.Plots["Plot"..tostring(plotNumber)].RainbowParts
+
 		for i,v in model:GetDescendants() do
 			
-			local rainbowParticle = ReplicatedStorage.RainbowParticles:Clone()
+			local rainbowParticle = ReplicatedStorage.Particles.RainbowParticles:Clone()
 			rainbowParticle.Parent = v
 			if v == model.PrimaryPart then
 				rainbowParticle.Rate = 18
@@ -220,7 +201,7 @@ end
 
 function module.finalizePosition(model, grass, scaleFactor, yOffset, rotationMultiplier)
 	local scale = module.getExponentialScale(scaleFactor)
-	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + module.getRandomFloat(-grass.Size.X*0.4, grass.Size.X*0.4), grass.Position.Y + yOffset*scale , grass.Position.Z + module.getRandomFloat(-grass.Size.Z*0.4, grass.Size.Z*0.4))))
+	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + RF.getRandomFloat(-grass.Size.X*0.4, grass.Size.X*0.4), grass.Position.Y + yOffset*scale , grass.Position.Z + RF.getRandomFloat(-grass.Size.Z*0.4, grass.Size.Z*0.4))))
 	model:ScaleTo(scale)
 
 	for i, v in model.PrimaryPart:GetTouchingParts() do
@@ -242,7 +223,7 @@ end
 
 
 function module.shakePart(model)
-	local randomDirection = module.getRandomFloat(-1,1)
+	local randomDirection = RF.getRandomFloat(-1,1)
 end
 
 
@@ -259,17 +240,17 @@ function module.makeSavanahLeaf(model, biome, position)
 	
 	local referenceLeaf = biomesFolder[biome].TreeLeaf
 	local mainLeaf = referenceLeaf:Clone()
-	local mainLeafSize = module.getRandomFloat(20, 25)
+	local mainLeafSize = RF.getRandomFloat(20, 25)
 	mainLeaf.Parent = model
-	mainLeaf.Size = Vector3.new(mainLeafSize, module.getRandomFloat(4,5), mainLeafSize)
+	mainLeaf.Size = Vector3.new(mainLeafSize, RF.getRandomFloat(4,5), mainLeafSize)
 	mainLeaf.Position = position
 	module.colorOffsetPart(mainLeaf, -25, 25)
 
 	
 	local subLeaf = referenceLeaf:Clone()
-	local subLeafSize = module.getRandomFloat(18, 22)
+	local subLeafSize = RF.getRandomFloat(18, 22)
 	subLeaf.Parent = model
-	subLeaf.Size = Vector3.new(mainLeafSize/1.5, module.getRandomFloat(4,5), mainLeafSize/1.5)
+	subLeaf.Size = Vector3.new(mainLeafSize/1.5, RF.getRandomFloat(4,5), mainLeafSize/1.5)
 	subLeaf.Position = position + Vector3.new(0, mainLeaf.Size.Y/2, 0)
 	module.colorOffsetPart(subLeaf, -25, 25)
 end

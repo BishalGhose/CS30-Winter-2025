@@ -1,18 +1,26 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterPlayer = game:GetService("StarterPlayer")
+
 local localPlayer = Players.LocalPlayer
 local mouse = localPlayer:GetMouse()
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local playerData = require(ReplicatedStorage:WaitForChild("PlayerData"))
+local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
+local CF = require(StarterPlayer.StarterPlayerScripts:WaitForChild("ClientFunctions"))
 
-local CCF = require(game.StarterPlayer.StarterPlayerScripts.ClientCommonFunctions)
-
-
+remoteEvents.UpdateClientData.OnClientEvent:Connect(function(playerId, data)
+	playerData[playerId] = data
+	print(playerData[playerId])
+end)
 
 
 
 
 
 mouse.Button1Down:Connect(function()
-	local model = CCF.checkBreakableHierarchy(mouse.Target)
+	local model = RF.checkBreakableHierarchy(mouse.Target)
 	if model then
 		local hitPos = mouse.Hit.Position
 		
@@ -21,12 +29,17 @@ mouse.Button1Down:Connect(function()
 		local particle = attachment:WaitForChild("ParticleEmitter")
 		tapPart.Position = hitPos
 		particle:Emit(1)
-		CCF.shakeModel(model)
-
-		CCF.breakModel(model)
- 	 	print("ranbreakmodel")
+		RF.shakeModel(model)
+		
+		RF.breakModel(model)
 	end
 end)
 
 
+
+
+
+
+task.wait(3)
+CF.displayBuyPlots()
 

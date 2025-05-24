@@ -1,12 +1,8 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
-local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-
-local localPlayer = Players.LocalPlayer
-local mouse = localPlayer:GetMouse()
-
+	
 
 
 local module = {}
@@ -29,11 +25,6 @@ end
 
 
 function module.shakeModel(model)
-	if not model.PrimaryPart then
-		warn("Model must have a PrimaryPart set!")
-		return
-	end
-
 	local originalCFrame = model:GetPivot()
 
 	local randomDirection = Vector3.new(
@@ -63,8 +54,32 @@ function module.breakModel(model)
 			end
 		end
 	end
+
 	model:Destroy()
-	print("destroyed")
 end
+
+
+
+
+function module.coordinateScale(increment, plotNumber, coords)
+	local x, z
+	if plotNumber == 1 then		
+		x = coords[1] * increment + increment
+		z = coords[2] * increment + increment
+	elseif plotNumber == 2 then
+		x = coords[1] * increment + increment
+		z = coords[2] * -increment - increment
+	elseif plotNumber == 3 then
+		x = coords[1] * -increment - increment
+		z = coords[2] * -increment - increment
+	elseif plotNumber == 4 then
+		x = coords[1] * -increment - increment
+		z = coords[2] * increment + increment
+	end
+	return x, z
+end
+
+
+
 
 return module

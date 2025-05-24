@@ -3,10 +3,25 @@ local ServerStorage = game:GetService("ServerStorage")
 local CollectionService = game:GetService("CollectionService")
 local RunService = game:GetService("RunService")
 
-local CF = require(ServerStorage.CommonFunctions)
+
+
+local importantValues = ReplicatedStorage.ImportantValues
+local SF = require(ServerStorage.ServerFunctions)
+local RF = require(ReplicatedStorage.ReplicatedFunctions)
 local moduleData = require(ServerStorage.ModuleData)
+local playerData = require(ReplicatedStorage.PlayerData)
 
 local module = {}
+
+function module.checkHeightSeed(plotNumber, scale, increment, seed, coords)
+	local x, z = RF.coordinateScale(increment, plotNumber, coords)
+
+	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
+	if noiseLocation < -0.5 or noiseLocation > 0.5 then
+		return false
+	end
+	return true
+end
 
 
 function module.replaceBlock(part, GrassType)
@@ -31,7 +46,7 @@ function module.replaceBlock(part, GrassType)
 	local GrassClone = GrassType.Grass:Clone()
 	GrassClone.Parent = part
 	GrassClone.Size = Vector3.new(part.Size.X, 1, part.Size.Z)
-	GrassClone.Position = Vector3.new(part.Position.X, part.Position.Y + part.Size.Y/2 + CF.getRandomFloat(0.45,0.5), part.Position.Z)
+	GrassClone.Position = Vector3.new(part.Position.X, part.Position.Y + part.Size.Y/2 + RF.getRandomFloat(0.45,0.5), part.Position.Z)
 
 
 	local offsetColor2 = math.random(-15,15)/255
@@ -75,7 +90,7 @@ function module.makeHeightNoise(x, z, scale, increment, seed1, plotNumber, part)
 	
 	local yMainPartLocation = y/2
 
-	part.Size = Vector3.new(increment + CF.getRandomFloat(0, increment), y, increment + CF.getRandomFloat(0, increment))
+	part.Size = Vector3.new(increment + RF.getRandomFloat(0, increment), y, increment + RF.getRandomFloat(0, increment))
 	part.Anchored = true
 	part.Position = Vector3.new(x, yMainPartLocation, z)
 	part.Parent = workspace.Plots["Plot"..tostring(plotNumber)].MainParts
@@ -87,50 +102,41 @@ function module.makeHeightNoise(x, z, scale, increment, seed1, plotNumber, part)
 		local difference1 = math.random(-15,15)
 		part.Color = Color3.fromRGB(199 + difference1, 159 + difference1, 119 + difference1)
 
-		local waterBlock = ReplicatedStorage.WaterBlock:Clone()
+		local waterBlock = ServerStorage.WaterBlock:Clone()
 		waterBlock.Parent = part
 
 		local ySize = 60 - (yMainPartLocation + part.Size.Y/2)
 		waterBlock.Size = Vector3.new(part.Size.X, ySize, part.Size.Z)
 		local yPosition = yMainPartLocation + part.Size.Y/2 + ySize/2
 		waterBlock.Position = Vector3.new(x, yPosition, z)
-		CF.colorOffsetPart(waterBlock, -15, 15)
+		SF.colorOffsetPart(waterBlock, -15, 15)
 	end
 end
 	
-function module.makeMap(plotNumber, tableOfCoords)
-	local heightScale = CF.getRandomFloat(.020, .028)
+	
+	
+function module.makeMap(plotNumber, playerId, tableOfCoords)
+	local heightScale = RF.getRandomFloat(.020, .028)
+	importantValues.Increment.Value = heightScale
 	local biomeScale = 0.0185
-	local increment = 64
+	local increment = ReplicatedStorage.ImportantValues.HeightScale.Value
 
 	
 	
 	local listOfBiomes = {}
 	for biomeName, chanceData in moduleData.BiomeChanceData do
-		table.insert(listOfBiomes, {biomeName, chanceData, math.random(1,100000000)})
+		local seed = math.random(1,100000000)
+		table.insert(listOfBiomes, {biomeName, chanceData, seed})
 	end
 
 	local seed = math.random(1,100000000)
-	while module.checkHeightSeed(plotNumber, heightScale, increment, seed) == false do
+	while module.checkHeightSeed(plotNumber, heightScale, increment, seed, {1,1}) == false do
 		seed = math.random(1,100000000)
 	end
 
 	for i,v in tableOfCoords do
-		local part = ReplicatedStorage.ChunkBlock:Clone()
-		local x, z
-		if plotNumber == 1 then
-			x = v[1] * increment + increment
-			z = v[2] * increment + increment
-		elseif plotNumber == 2 then
-			x = v[1] * -increment - increment
-			z = v[2] * increment + increment
-		elseif plotNumber == 3 then
-			x = v[1] * increment + increment
-			z = v[2] * -increment - increment
-		elseif plotNumber == 4 then
-			x = v[1] * -increment - increment
-			z = v[2] * -increment - increment
-		end
+		local part = ServerStorage.ChunkBlock:Clone()
+		local x, z = RF.coordinateScale(increment, plotNumber, v)
 
 
 		module.makeHeightNoise(x, z, heightScale, increment, seed, plotNumber, part)
@@ -155,9 +161,10 @@ end
 
 function module.deleteMap(plotNumber)
 	local plotFolder = workspace.Plots["Plot"..tostring(plotNumber)]
-
-	for i, v in plotFolder:GetChildren() do
-		for x, y in v:GetChildren() do
+	local tableOfPartsFolders = {"MainParts", "GoldenParts", "RainbowParts"}
+	
+	for i, v in tableOfPartsFolders do
+		for x, y in plotFolder[v]:GetChildren() do
 			if y:IsA("Highlight") == false then
 				y:Destroy()
 			end
@@ -165,29 +172,7 @@ function module.deleteMap(plotNumber)
 	end
 end
 
-function module.checkHeightSeed(plotNumber, scale, increment, seed)
-	local x, z
-	local doubleIncrement = increment*2
-	if plotNumber == 1 then
-		x = doubleIncrement
-		z = doubleIncrement
-	elseif plotNumber == 2 then
-		x = -doubleIncrement
-		z = doubleIncrement
-	elseif plotNumber == 3 then
-		x = doubleIncrement
-		z = -doubleIncrement
-	elseif plotNumber == 4 then
-		x = -doubleIncrement
-		z = -doubleIncrement
-	end
-	
-	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
-	if noiseLocation < -0.5 or noiseLocation > 0.5 then
-		return false
-	end
-	return true
-end
+
 
 
 return module
