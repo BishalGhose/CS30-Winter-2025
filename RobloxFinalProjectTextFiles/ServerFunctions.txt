@@ -3,12 +3,13 @@ local CollectionService = game:GetService("CollectionService")
 local ServerStorage = game:GetService("ServerStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
-
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
 
 local biomesFolder = ReplicatedStorage.Biomes
-local moduleData = require(ServerStorage.ModuleData)
-local RF = require(ReplicatedStorage.ReplicatedFunctions)
 
+local moduleData = require(ReplicatedStorage.ModuleData)
+local RF = require(ReplicatedStorage.ReplicatedFunctions)
 
 
 local module = {}
@@ -35,7 +36,7 @@ function module.studMaker(part, model, positionVector, sizeVector, bottomColorOf
 end
 
 function module.findListPos(number, pos, list)
-	if number <= list[pos] then
+	if number <= list[pos] then 
 		return 1
 	end
 
@@ -203,6 +204,7 @@ function module.finalizePosition(model, grass, scaleFactor, yOffset, rotationMul
 	local scale = module.getExponentialScale(scaleFactor)
 	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + RF.getRandomFloat(-grass.Size.X*0.4, grass.Size.X*0.4), grass.Position.Y + yOffset*scale , grass.Position.Z + RF.getRandomFloat(-grass.Size.Z*0.4, grass.Size.Z*0.4))))
 	model:ScaleTo(scale)
+	model:SetAttribute("Scale", scale)
 
 	for i, v in model.PrimaryPart:GetTouchingParts() do
 		if v ~= model.Parent and v.Name == "ChunkBlock" then
@@ -256,11 +258,34 @@ function module.makeSavanahLeaf(model, biome, position)
 end
 
 
+function module.devProductManager()
+	MarketplaceService.ProcessReceipt = function(receiptInfo)
+		print(receiptInfo)
+		local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
+
+		if not player then
+			return Enum.ProductPurchaseDecision.NotProcessedYet
+		end
+
+		local productId = receiptInfo.ProductId
+
+		if productId == 12345678 then 
 
 
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
 
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+end
 
+function module.changePlayersMoney(player, amount)
+	local leaderstats = player:FindFirstChild("leaderstats")
+	local money = leaderstats:FindFirstChild("Money")
+	money.Value += amount
+end
 
 
 return module
+
 

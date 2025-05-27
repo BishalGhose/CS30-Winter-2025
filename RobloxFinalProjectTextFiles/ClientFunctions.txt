@@ -3,40 +3,48 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local StarterGui = game:GetService("StarterGui")
+
+
 
 local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 local mouse = localPlayer:GetMouse()
 local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local plots = workspace:WaitForChild("Plots")
 local importantValues = ReplicatedStorage:WaitForChild("ImportantValues")
-local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 
+local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
+local moduleData = require(ReplicatedStorage.ModuleData)
 
 
 local module = {}
 
+function module.checkCoordinates(coord, coordinatesTable, buyCoordinates)
+	for i,v in coordinatesTable do
+		if coord[1] == v[1] and coord[2] == v[2] then
+			return false
+		end
+	end
+	for i,v in buyCoordinates do
+		if coord[1] == v[1] and coord[2] == v[2] then
+			return false
+		end
+	end
+	return true
+end
+
+
+
+
 
 function module.displayBuyPlots()
-	print("ran")
 	local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
 	local playerData = require(ReplicatedStorage.PlayerData)[Players:GetUserIdFromNameAsync(localPlayer.Name)]
 	local coordinatesTable = playerData["OwnedChunks"]
 	local buyCoordinates = {}
 
-	local function checkCoordinates(coord)
-		for i,v in coordinatesTable do
-			if coord[1] == v[1] and coord[2] == v[2] then
-				return false
-			end
-		end
-		for i,v in buyCoordinates do
-			if coord[1] == v[1] and coord[2] == v[2] then
-				return false
-			end
-		end
-		return true
-	end
 
 	for i,v in coordinatesTable do
 		local downOffset = 1
@@ -57,20 +65,103 @@ function module.displayBuyPlots()
 			}
 
 		for i,v in offsetCoords do
-			if checkCoordinates(v) then
+			if module.checkCoordinates(v, coordinatesTable, buyCoordinates) then
 				table.insert(buyCoordinates, v)
 			end
 		end
-
 	end
+	module.putIn3dSpace(buyCoordinates)
+end
 
+
+
+
+function module.putIn3dSpace(buyCoordinates)
 	for i,v in buyCoordinates do
-		local x, z = RF.coordinateScale(importantValues:WaitForChild("Increment").Value, plotNumber, v)
-		local buyPlotUI = ReplicatedStorage:WaitForChild("BuyPlotUI"):Clone()
-		print("hi,", x, z)
-		buyPlotUI.Parent = plots:WaitForChild("Plot"..tostring(plotNumber)):WaitForChild("BuyUIFolder")
-		buyPlotUI.Position = Vector3.new(x, 140, z)
+		local increment = importantValues:WaitForChild("Increment").Value
+		local x, z = RF.coordinateScale(increment, plotNumber, v)
+
+		
+
+
+		local ySize, yPosition = module.checkNearbyY(v, plotNumber)
+
+
+		local buyUIFolder = plots:WaitForChild("Plot"..plotNumber):WaitForChild("BuyUIFolder")
+		local buyPlotUIPart = ReplicatedStorage:WaitForChild("BuyPlotUIPart"):Clone()
+		buyPlotUIPart.Parent = buyUIFolder
+		buyPlotUIPart.Position = Vector3.new(x, yPosition + ySize/2 + 15, z)
+		CollectionService:AddTag(buyUIFolder, v[1]..v[2]..plotNumber)
+
+		local buyPlotNumber = math.max(v[1], v[2])
+		if buyPlotNumber > 21 then
+			buyPlotNumber = 21
+		end
+
+
+		local outlineBlock = ReplicatedStorage:WaitForChild("OutlineBlock"):Clone()
+		outlineBlock.Parent = buyPlotUIPart
+		outlineBlock.Size = Vector3.new(increment, ySize, increment)
+		outlineBlock.Position = Vector3.new(x, yPosition, z)
+
+
+		local buyPlotUI = StarterGui:WaitForChild("BuyPlotUI"):Clone()
+
+		buyPlotUI.Adornee = buyPlotUIPart
+		buyPlotUI.Parent = playerGui:WaitForChild("BillboardGuiStorage")
+
+		buyPlotUI.Enabled = true
+
+		local buyPlotNumber = math.max(v[1], v[2])
+
+		buyPlotUI:WaitForChild("PriceFrame"):WaitForChild("PriceText").Text = "$"..RF.addCommas(buyPlotNumber ^ 6)
+		if buyPlotNumber > 21 then
+			buyPlotNumber = 21
+		end
+		buyPlotUI:SetAttribute("BuyPlotNumber", buyPlotNumber)
+
+		local price = moduleData.BuyPlotProducts[buyPlotNumber][2]
+		
+		buyPlotUI:WaitForChild("RobuxBuyFrame"):WaitForChild("Frame"):WaitForChild('TextButton').Text = price
 	end
 end
+
+
+
+function module.checkNearbyY(location, plotNumber)
+	local ySize = 0
+	local yPosition = 0
+	local amountNearby = 0
+
+	local nearbyLocations = 
+	{
+		{location[1] + 1, location[2]},
+		{location[1], location[2] + 1},
+		{location[1] - 1, location[2]},
+		{location[1], location[2] - 1}
+	}
+
+	for i,v in nearbyLocations do
+		local chunk = plots:WaitForChild("Plot"..plotNumber):WaitForChild("MainParts"):FindFirstChild(v[1]..","..v[2]..","..plotNumber)
+
+		if chunk then
+			amountNearby += 1
+			ySize += chunk.Size.Y
+			yPosition += chunk.Position.Y
+		end
+	end
+
+	return ySize/amountNearby, yPosition/amountNearby
+end
+
+
+
+
+
+
+
+
+
+return module
 
 

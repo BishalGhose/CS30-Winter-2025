@@ -3,16 +3,21 @@ local ServerStorage = game:GetService("ServerStorage")
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local CollectionService = game:GetService("CollectionService")
+
 
 local mainModuleFunctions = require(ServerStorage.MainModuleFunctions)
-local terrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
 local proceduralFunctions = require(ServerStorage.ProceduralFunctions)
 local playerData = require(ReplicatedStorage.PlayerData)
+local moduleData = require(ReplicatedStorage.ModuleData)
+local RF = require(ReplicatedStorage.ReplicatedFunctions)
+local SF = require(ServerStorage.ServerFunctions)
+local terrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
+
+
 local plots = workspace.Plots
-local tableOfOccupiedPlots = {}
 local remoteEvents = ReplicatedStorage.RemoteEvents
-
-
+local tableOfOccupiedPlots = {}
 
 
 
@@ -20,6 +25,7 @@ local remoteEvents = ReplicatedStorage.RemoteEvents
 for i=1, 4 do
 	table.insert(tableOfOccupiedPlots, "Open")
 end
+
 
 local tableOfTPLocations = 
 {
@@ -43,19 +49,26 @@ end
 
 
 
-
-
-
 Players.PlayerAdded:Connect(function(player)
 	local playerId = Players:GetUserIdFromNameAsync(player.Name)
 	
+	local leaderstats = Instance.new("Folder")
+	leaderstats.Name = "leaderstats"
+	leaderstats.Parent = player
+
+	local coins = Instance.new("NumberValue")
+	coins.Name = "Money"
+	coins.Value = 0
+	coins.Parent = leaderstats
+	
+
 	local playerNumber = Instance.new("NumberValue")
 	playerNumber.Parent = player
 	playerNumber.Name = "PlotNumber"
 
-	print(tableOfOccupiedPlots)
+
+
 	for i,v in ipairs(tableOfOccupiedPlots) do
-		print(i, v)
 		if v == "Open" then
 			playerNumber.Value = i
 			tableOfOccupiedPlots[i] = "Closed"
@@ -64,6 +77,7 @@ Players.PlayerAdded:Connect(function(player)
 	end
 	
 	local playerPlotNumber = playerNumber.Value
+
 	local playerPlot = workspace.Plots["Plot"..tostring(playerPlotNumber)]
 	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = player.Name.."'s Plot"
 
@@ -76,12 +90,18 @@ Players.PlayerAdded:Connect(function(player)
 
 	playerData[playerId] = {}
 	local playerDataTable = playerData[playerId]
-	playerDataTable["OwnedChunks"] = {{1,1}, {1,2}, {2,1}, {2,2}, {5,5}, {4,5}}
-	print(playerDataTable)
+	playerDataTable["OwnedChunks"] = {}
+	for i = 1, 25 do
+		for x = 1, 25 do
+			table.insert(playerDataTable["OwnedChunks"], {i,x})
+		end
+	end
 	remoteEvents.UpdateClientData:FireClient(player, playerId, playerData[playerId])
 	
-	mainModuleFunctions.makeMap(playerPlotNumber, playerId, playerDataTable["OwnedChunks"])
-	terrainDecorationsManager.decorateMap(playerPlotNumber)
+	mainModuleFunctions.makeMap(playerPlotNumber, player, playerDataTable["OwnedChunks"])
+
+
+
 end)
 
 
@@ -96,3 +116,51 @@ Players.PlayerRemoving:Connect(function(player)
 	tableOfOccupiedPlots[player.PlotNumber.Value] = "Open" 
 end)
 
+
+
+remoteEvents.TeleportHome.OnServerEvent:Connect(function(player)
+	player.Character:PivotTo(CFrame.new(Vector3.new(0, 132, 0)))
+end)
+
+
+SF.devProductManager()
+
+
+
+
+while true do
+	for plotNumber,v in ipairs(tableOfOccupiedPlots) do
+		if v == "Closed" then
+
+			local currentPlot = plots["Plot"..tostring(plotNumber)]
+			local tableOfChunks = currentPlot.MainParts:GetChildren()
+			local tableOfDensities = {}
+			local maxObjects = 0
+			
+			for x,y in ipairs(tableOfChunks) do
+				local biomeType = y:GetTags()[1]
+				local objectDensity = moduleData.BiomeObjectDensity[biomeType]
+
+				table.insert(tableOfDensities, objectDensity)
+				maxObjects += objectDensity
+			end
+
+			local currentObjects = currentPlot.NumberOfObjects.Value
+
+			local fillRatio = currentObjects/maxObjects
+
+			if (math.random())^2 >= fillRatio then
+				local RNG = math.random(1, maxObjects)
+				local chunkPos = SF.findListPos(RNG, 1, tableOfDensities)
+				local chunk = tableOfChunks[chunkPos]
+
+				terrainDecorationsManager.decorateMap(chunk, plotNumber)
+				currentPlot.NumberOfObjects.Value += 1
+			end
+			
+			
+			
+		end
+	end
+	task.wait(RF.getRandomFloat(0.3, 0.7))
+end

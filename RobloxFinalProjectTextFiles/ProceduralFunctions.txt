@@ -5,7 +5,7 @@ local RunService = game:GetService("RunService")
 local StarterPlayer = game:GetService("StarterPlayer")
 
 local biomesFolder = ReplicatedStorage.Biomes
-local ModuleData = require(ServerStorage.ModuleData)
+local moduleData = require(ReplicatedStorage.ModuleData)
 local SF = require(ServerStorage.ServerFunctions)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
 
@@ -15,7 +15,7 @@ local module = {}
 function module.makeMiniRock(chunkPart, biome, plotNumber, shape, heightDifference, scaleFactor)
 	local model = SF.makePartModel(chunkPart, shape.."_Rock")
 	
-	local grass = chunkPart.Grass
+	local grass = chunkPart.Grass      
 
 
 	if shape == "normal" then ---------------------------------------------------------------------
@@ -33,8 +33,7 @@ function module.makeMiniRock(chunkPart, biome, plotNumber, shape, heightDifferen
 
 
 		model.PrimaryPart = model:GetChildren()[1]
-		model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + heightDifference, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
-		model:ScaleTo(SF.getExponentialScale(0.06))
+		SF.finalizePosition(model, grass, 0.06, heightDifference)
 
 	elseif shape == "spikey" then ---------------------------------------------------------------------
 		for i = 1, math.random(3,4) do
@@ -50,8 +49,7 @@ function module.makeMiniRock(chunkPart, biome, plotNumber, shape, heightDifferen
 
 
 		model.PrimaryPart = model:GetChildren()[1]
-		model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + heightDifference, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
-		model:ScaleTo((SF.getExponentialScale(0.07))*scaleFactor)
+		SF.finalizePosition(model, grass, 0.07, heightDifference)
 
 	elseif shape == "flat" then ---------------------------------------------------------------------
 		for i = 1, math.random(1,2) do
@@ -67,72 +65,15 @@ function module.makeMiniRock(chunkPart, biome, plotNumber, shape, heightDifferen
 
 
 		model.PrimaryPart = model:GetChildren()[1]
-		model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y - heightDifference, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
-		model:ScaleTo((SF.getExponentialScale(0.06))*scaleFactor)
+		SF.finalizePosition(model, grass, 0.03, heightDifference)
 	end
 	
 	SF.runGoldenChance(model, plotNumber )
 	SF.runRainbowChance(model, plotNumber)
 end
 
--------------------------------------------------------------------------------------------------------------------------------------
-function module.makeMiniGrass(chunkPart, biome, plotNumber, shape, heightDifference, scaleFactor)
-	local model = SF.makePartModel(chunkPart, shape.."_Grass")
 
-	local grass = chunkPart.Grass
 
-	if shape == "normal" then ---------------------------------------------------------------------
-		for i = 1, math.random(5, 8) do
-			SF.studMaker(
-				biomesFolder[biome].Grass,
-				model,
-				Vector3.new(RF.getRandomFloat(-6, 6), RF.getRandomFloat(-0.2, 0.5) + heightDifference, RF.getRandomFloat(-6, 6)),
-				Vector3.new(RF.getRandomFloat(0.3, 0.6), RF.getRandomFloat(1, 2.5), RF.getRandomFloat(0.3, 0.6)),
-				-10,
-				10
-			)
-		end
-
-		model.PrimaryPart = model:GetChildren()[1]
-		model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + heightDifference, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
-		model:ScaleTo(SF.getExponentialScale(0.04) * scaleFactor)
-
-	elseif shape == "tall" then ---------------------------------------------------------------------
-		for i = 1, math.random(4, 6) do
-			SF.studMaker(
-				biomesFolder[biome].Grass,
-				model,
-				Vector3.new(RF.getRandomFloat(-5, 5), RF.getRandomFloat(0, 2), RF.getRandomFloat(-5, 5)),
-				Vector3.new(RF.getRandomFloat(0.4, 0.8), RF.getRandomFloat(2.5, 4), RF.getRandomFloat(0.4, 0.8)),
-				-5,
-				5
-			)
-		end
-
-		model.PrimaryPart = model:GetChildren()[1]
-		model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + heightDifference, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
-		model:ScaleTo(SF.getExponentialScale(0.05) * scaleFactor)
-
-	elseif shape == "wide" then ---------------------------------------------------------------------
-		for i = 1, math.random(6, 9) do
-			SF.studMaker(
-				biomesFolder[biome].Grass,
-				model,
-				Vector3.new(RF.getRandomFloat(-8, 8), RF.getRandomFloat(-0.3, 0.3), RF.getRandomFloat(-8, 8)),
-				Vector3.new(RF.getRandomFloat(1, 2), RF.getRandomFloat(0.5, 1.5), RF.getRandomFloat(1, 2)),
-				-15,
-				15
-			)
-		end
-
-		model.PrimaryPart = model:GetChildren()[1]
-		model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + math.random(-grass.Size.X/3, grass.Size.X/3), grass.Position.Y + heightDifference, grass.Position.Z + math.random(-grass.Size.Z/3, grass.Size.Z/3))))
-		model:ScaleTo(SF.getExponentialScale(0.035) * scaleFactor)
-	end
-
-	SF.runGoldenChance(model, plotNumber )
-	SF.runRainbowChance(model, plotNumber)
-end
 
 
 
@@ -298,7 +239,7 @@ function module.makeSavanahTree(chunkPart, biome, plotNumber)
 	
 	local grass = chunkPart.Grass
 	model.PrimaryPart = bottomWood
-	SF.finalizePosition(model, grass, 0.02, (bottomWood.Size.Y/2), math.random(1,4))
+	SF.finalizePosition(model, grass, 0.02, (bottomWood.Size.Y/2), 0, math.random(1,4))
 	SF.runGoldenChance(model, plotNumber)
 	SF.runRainbowChance(model, plotNumber)
 end
@@ -311,6 +252,7 @@ function module.makePineConeTree(chunkPart, biome, plotNumber)
 	local model = SF.makePartModel(chunkPart, "Pine_Cone_Tree")
 
 	local trunk = biomesFolder[biome].Wood:Clone()
+	trunk.Size = Vector3.new(2.3, 15, 2.3)
 	trunk.Parent = model
 	local leafLayers = math.random(8,12)
 	local startingSize = math.random(3,12)
@@ -318,7 +260,7 @@ function module.makePineConeTree(chunkPart, biome, plotNumber)
 		local leaf = biomesFolder[biome].TreeLeaf:Clone()
 		leaf.Parent = model
 		local size = startingSize - (i - 1) * 1
-		leaf.Position = Vector3.new(trunk.Position.X,(trunk.Position.Y + i) * 1.2, trunk.Position.Z) 
+		leaf.Position = Vector3.new(trunk.Position.X,trunk.Position.Y + i * 1.3, trunk.Position.Z) 
 		leaf.Size = Vector3.new(size , 2 , size)
 
 	end
@@ -366,7 +308,7 @@ end
 
 
 function module.makeBerryBush(chunkPart, biome, plotNumber)
-	local berryChanceList = ModuleData.BerryBiomeChance[biome]
+	local berryChanceList = moduleData.BerryBiomeChance[biome]
 	local summedNumber = 0
 
 	for i,v in berryChanceList do
@@ -374,7 +316,7 @@ function module.makeBerryBush(chunkPart, biome, plotNumber)
 	end
 
 
-	local berryType = ModuleData.BerryNumber[SF.findListPos(math.random(1, summedNumber), 1, berryChanceList)]
+	local berryType = moduleData.BerryNumber[SF.findListPos(math.random(1, summedNumber), 1, berryChanceList)]
 	local model = SF.makePartModel(chunkPart, berryType.."_Berry_Bush")
 
 
@@ -400,19 +342,15 @@ end
 
 
 
-
-
-
-
 function module.makeOreBlock(chunkPart, biome, plotNumber)
-	local oreChanceList = ModuleData.OreBiomeChance[biome]
+	local oreChanceList = moduleData.OreBiomeChance[biome]
 	local summedNumber = 0
 
 	for i,v in oreChanceList do
 		summedNumber += v
 	end
 
-	local oreType = ModuleData.OreNumber[SF.findListPos(math.random(1, summedNumber), 1, oreChanceList)]
+	local oreType = moduleData.OreNumber[SF.findListPos(math.random(1, summedNumber), 1, oreChanceList)]
 	local model = SF.makePartModel(chunkPart, oreType.."_Ore")
 
 	local stud = SF.studMaker(
@@ -436,15 +374,34 @@ end
 
 
 
+--function module.makeGrassCluster(chunkPart, Biome, plotNumber)
+--	local model = SF.makePartModel(chunkPart, "Grass_Cluster")
+--	local grass = chunkPart.Grass
 
-function module.makeGrassCluster(chunkPart, Biome, plotNumber)
-	local model = SF.makePartModel(chunkPart, "Grass_Cluster")
+--	for i = 1, math.random(3,6) do
+--		SF.studMaker(biomesFolder[biome].GrassBlock,
+--			model,
+--			Vector3.new(RF.getRandomFloat(-4,4),RF.getRandomFloat(-0.5,0.5) + heightDifference, RF.getRandomFloat(-4,4)),
+--			Vector3.new(RF.getRandomFloat(0.8, 1.5), RF.getRandomFloat(2, 4), RF.getRandomFloat(0.8, 1.5)),
+--			-10,
+--			10
+--		)
+--	end
 
-	for i = 1, math.random(10,15) do
-		local grassPart = biomesFolder
-	end
-end
+--	model.PrimaryPart = model:getCHildren()[1]
+--	SF.finalizePosition(model, grass, 0.04, (model.PrimaryPart.Size.Y/2) + heightDifference)
+--	SF.runGoldenChance(model, plotNumber)
+--	SF.runRainbowChance(model, plotNumber)
+--end
+--	)
 
+--SF.finalizePosition(model, grass, 0.03, heightDifference)
+--SF.runGoldenChance(model, plotNumber)
+--SF.runRainbowChance(model, plotNumber)
+--end
+
+
+--	end
 
 
 
@@ -453,6 +410,7 @@ end
 
 
 return module
+
 
 
 

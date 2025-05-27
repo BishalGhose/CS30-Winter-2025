@@ -5,22 +5,26 @@ local RunService = game:GetService("RunService")
 
 
 
-local importantValues = ReplicatedStorage.ImportantValues
 local SF = require(ServerStorage.ServerFunctions)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
-local moduleData = require(ServerStorage.ModuleData)
+local moduleData = require(ReplicatedStorage.ModuleData)
 local playerData = require(ReplicatedStorage.PlayerData)
+
+
+local remoteEvents = game.ReplicatedStorage.RemoteEvents
+local importantValues = ReplicatedStorage.ImportantValues
 
 local module = {}
 
 function module.checkHeightSeed(plotNumber, scale, increment, seed, coords)
-	local x, z = RF.coordinateScale(increment, plotNumber, coords)
+	local x, z = coords[1] * increment, coords[2]*increment
 
 	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
 	if noiseLocation < -0.5 or noiseLocation > 0.5 then
 		return false
+	else
+		return true
 	end
-	return true
 end
 
 
@@ -29,10 +33,12 @@ function module.replaceBlock(part, GrassType)
 		v:Destroy()
 	end
 
-	for i,v in CollectionService:GetTags(part) do
-		CollectionService:RemoveTag(part, v)
+	for i,v in moduleData.GrassTypes do
+		if part:HasTag(v) then
+			CollectionService:RemoveTag(part, v)
+		end
 	end
-
+	
 	CollectionService:AddTag(part, GrassType.Name)
 
 	
@@ -115,11 +121,11 @@ end
 	
 	
 	
-function module.makeMap(plotNumber, playerId, tableOfCoords)
-	local heightScale = RF.getRandomFloat(.020, .028)
-	importantValues.Increment.Value = heightScale
+function module.makeMap(plotNumber, player, tableOfCoords)
+	local heightScale = RF.getRandomFloat(.022, .026)
+	importantValues.HeightScale.Value = heightScale
 	local biomeScale = 0.0185
-	local increment = ReplicatedStorage.ImportantValues.HeightScale.Value
+	local increment = ReplicatedStorage.ImportantValues.Increment.Value
 
 	
 	
@@ -136,22 +142,29 @@ function module.makeMap(plotNumber, playerId, tableOfCoords)
 
 	for i,v in tableOfCoords do
 		local part = ServerStorage.ChunkBlock:Clone()
+		part.Name = v[1]..","..v[2]..","..plotNumber
+
+
 		local x, z = RF.coordinateScale(increment, plotNumber, v)
 
 
 		module.makeHeightNoise(x, z, heightScale, increment, seed, plotNumber, part)
 
-		for i, data in listOfBiomes do
+		for i, data in ipairs(listOfBiomes) do
 			module.makeBiomeNoise(x, z, biomeScale * data[2][2], increment, data, part)
 		end
 	end
 	
 
 
-	for i,v in workspace.Plots["Plot"..tostring(plotNumber)].MainParts:GetChildren() do
-		
-		if #v:GetTags() == 0 then
-			
+	for i,v in workspace.Plots["Plot"..plotNumber].MainParts:GetChildren() do
+		local hasTag = false
+		for x,y in moduleData.GrassTypes do
+			if v:HasTag(y) then
+				hasTag = true
+			end
+		end
+		if hasTag == false then
 			module.replaceBlock(v, ReplicatedStorage.Biomes.NormalGrass)
 			CollectionService:AddTag(v, "NormalGrass")
 		end
@@ -160,7 +173,7 @@ end
 
 
 function module.deleteMap(plotNumber)
-	local plotFolder = workspace.Plots["Plot"..tostring(plotNumber)]
+	local plotFolder = workspace.Plots["Plot"..plotNumber]
 	local tableOfPartsFolders = {"MainParts", "GoldenParts", "RainbowParts"}
 	
 	for i, v in tableOfPartsFolders do
@@ -176,5 +189,6 @@ end
 
 
 return module
+
 
 

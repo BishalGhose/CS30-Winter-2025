@@ -26,36 +26,33 @@ end
 
 function module.shakeModel(model)
 	local originalCFrame = model:GetPivot()
+	local scale = model:GetAttribute("Scale")
 
-	local randomDirection = Vector3.new(
-		math.random(-100, 100) / 100,
-		math.random(-100, 100) / 100,
-		math.random(-100, 100) / 100
-	).Unit
+	model:ScaleTo(scale * 1.05)
+	task.wait(0.1)
+	model:ScaleTo(scale)
+end
 
-	local offset = randomDirection * 0.2 
+function module.addCommas(num)
+	local str = tostring(num)
+	local result = ""
+	local count = 0
 
-
-	local tableOfOffsets = {offset, - offset, Vector3.zero}
-
-	for i,v in tableOfOffsets do
-		model:PivotTo(originalCFrame + v)
-		task.wait(0.1)
+	for i = #str, 1, -1 do
+		result = str:sub(i,i) .. result
+		count = count + 1
+		if count == 3 and i > 1 then
+			result = "," .. result
+			count = 0
+		end
 	end
+
+	return result
 end
 
 
 function module.breakModel(model)
-	for i = 1, 10 do
-		for i,v in model:GetDescendants() do
-			if v:IsA("Part") then
-				v.Transparency += 0.1
-				task.wait()
-			end
-		end
-	end
 
-	model:Destroy()
 end
 
 
@@ -80,6 +77,14 @@ function module.coordinateScale(increment, plotNumber, coords)
 end
 
 
+
+local function stringToCoord(string)
+	local result = {}
+	for i,v in string.gmatch(string, "[^,]+") do
+		table.insert(result, tonumber(v))
+	end
+	return result
+end
 
 
 return module

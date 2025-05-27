@@ -3,9 +3,13 @@ local CollectionService = game:GetService("CollectionService")
 local ServerStorage = game:GetService("ServerStorage")
 local RunService = game:GetService("RunService")
 
-local ModuleData = require(ServerStorage.ModuleData)
-local ProceduralFunctions = require(ServerStorage.ProceduralFunctions)
-local CF = require(ServerStorage.CommonFunctions)
+local moduleData = require(ReplicatedStorage.ModuleData)
+local proceduralFunctions = require(ServerStorage.ProceduralFunctions)
+local RF = require(ReplicatedStorage.ReplicatedFunctions)
+
+
+
+
 
 local module = {}
 
@@ -13,217 +17,174 @@ local module = {}
 
 
 
-function module.decorateMap()
-	for i,v in game.Workspace.MainParts:GetChildren() do
-		task.wait()
-		local BiomeType = v:GetTags()[1]
-
-		if BiomeType == "Water" then
-			
-		elseif BiomeType == "NormalGrass" then ------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.NormalGrass + math.random(0,1)
+function module.decorateMap(chunk, plotNumber)
+	local biomeType = chunk:GetTags()[1]
+	local RNG = RF.getRandomFloat(1,1000)
+	local numberOfObjects = workspace.Plots["Plot"..tostring(plotNumber)].NumberOfObjects
 
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 900 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", 0, 1)
-				elseif RNG > 500 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				elseif RNG > 200 then
-					ProceduralFunctions.makeBasicBush(v, BiomeType)
-				elseif RNG > 150 then
-					ProceduralFunctions.makeOreBlock(v, BiomeType)
-				elseif RNG > 100 then
-					ProceduralFunctions.makeBerryBush(v, BiomeType)
-				end
-			end	
-
-		elseif BiomeType == "ForestGrass" then ---------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.ForestGrass + math.random(0,1)
+	if biomeType == "Water" then
 
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 980 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
-				elseif RNG > 600 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				elseif RNG > 430 then
-					ProceduralFunctions.makeBamboo(v, BiomeType)
-				elseif RNG > 310 then
-					ProceduralFunctions.makeBasicBush(v, BiomeType)
-				elseif RNG > 280 then
-					ProceduralFunctions.makeBerryBush(v, BiomeType)
-				
-				end
-			end
-
-		elseif BiomeType == "DesertGrass" then ------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.DesertGrass + math.random(0,1)
+	elseif biomeType == "NormalGrass" then ------------------------------------------------------------------
+		if RNG > 900 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", 0, 1)
+		elseif RNG > 500 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		elseif RNG > 200 then
+			proceduralFunctions.makeBasicBush(chunk, biomeType, plotNumber)
+		elseif RNG > 150 then
+			proceduralFunctions.makeOreBlock(chunk, biomeType, plotNumber)
+		elseif RNG > 100 then
+			proceduralFunctions.makeBerryBush(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
+		end
 
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 850 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -3, 1)
-				elseif RNG > 350 then
-					ProceduralFunctions.makeCactus(v, BiomeType)
-				elseif RNG > 250 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "flat", -3, math.random(10,20)/20)
-				elseif RNG > 150 then
-					ProceduralFunctions.makeBasicBush(v, BiomeType)
-				else
-					ProceduralFunctions.makeBerryBush(v, BiomeType)
-				end
-			end
-			
-		elseif BiomeType == "StoneyGrass" then --------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.StoneyGrass + math.random(0,1)
+	elseif biomeType == "ForestGrass" then ---------------------------------------------------
+		if RNG > 980 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -2, 1)
+		elseif RNG > 600 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		elseif RNG > 430 then
+			proceduralFunctions.makeBamboo(chunk, biomeType, plotNumber)
+		elseif RNG > 310 then
+			proceduralFunctions.makeBasicBush(chunk, biomeType, plotNumber)
+		elseif RNG > 280 then
+			proceduralFunctions.makeBerryBush(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
+		end
 
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 500 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "spikey", 0, 1)
-				elseif RNG > 400 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", 0, 1)
-				elseif RNG > 200 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "flat", -3, 1) 
-				end
-			end
-			
-		elseif BiomeType == "SnowyGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.SnowyGrass + math.random(0,1)
+	elseif biomeType == "DesertGrass" then ------------------------------------------------------------------
+		if RNG > 850 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -3, 1)
+		elseif RNG > 350 then
+			proceduralFunctions.makeCactus(chunk, biomeType, plotNumber)
+		elseif RNG > 250 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "flat", -3, math.random(10,20)/20)
+		elseif RNG > 150 then
+			proceduralFunctions.makeBasicBush(chunk, biomeType, plotNumber)
+		else
+			proceduralFunctions.makeBerryBush(chunk, biomeType, plotNumber)
+		end
 
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 850 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1.5)
-				elseif RNG > 700 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				elseif RNG > 500 then
-					ProceduralFunctions.makeBasicBush(v, BiomeType)
-				elseif RNG > 420 then
-					ProceduralFunctions.makeBerryBush(v, BiomeType)
-				end
-			end
-			
-		elseif BiomeType == "DirtGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.DirtGrass + math.random(0,1)
+	elseif biomeType == "StoneyGrass" then --------------------------------------------------------------------
+		if RNG > 500 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "spikey", 0, 1)
+		elseif RNG > 400 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", 0, 1)
+		elseif RNG > 200 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "flat", -3, 1) 
+		else
+			numberOfObjects.Value -= 1
+		end
 
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 600 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
-				elseif RNG > 100 then
-					ProceduralFunctions.makeDeadTree(v, BiomeType)
-				else 
-					ProceduralFunctions.makeOreBlock(v, BiomeType)
-				end
-			end
-			
-		elseif BiomeType == "AutumnGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.AutumnGrass + math.random(0,1)
+	elseif biomeType == "SnowyGrass" then ------------------------------------------------------------------------------------
+		if RNG > 850 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -2, 1.5)
+		elseif RNG > 700 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		elseif RNG > 500 then
+			proceduralFunctions.makeBasicBush(chunk, biomeType, plotNumber)
+		elseif RNG > 420 then
+			proceduralFunctions.makeBerryBush(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
+		end
 
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 930 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
-				elseif RNG > 700 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				elseif RNG > 500 then
-					ProceduralFunctions.makeBasicBush(v, BiomeType)
-				elseif RNG > 420 then
-					ProceduralFunctions.makeBerryBush(v, BiomeType)
-				end
-			end
-			
-		elseif BiomeType == "FairyGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.FairyGrass + math.random(0,1)
+	elseif biomeType == "DirtGrass" then ------------------------------------------------------------------------------------
+		if RNG > 600 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -2, 1)
+		elseif RNG > 100 then
+			proceduralFunctions.makeDeadTree(chunk, biomeType, plotNumber)
+		else 
+			proceduralFunctions.makeOreBlock(chunk, biomeType, plotNumber)
+		end
+
+	elseif biomeType == "AutumnGrass" then ------------------------------------------------------------------------------------
+		if RNG > 930 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -2, 1)
+		elseif RNG > 700 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		elseif RNG > 500 then
+			proceduralFunctions.makeBasicBush(chunk, biomeType, plotNumber)
+		elseif RNG > 420 then
+			proceduralFunctions.makeBerryBush(chunk, biomeType, plotNumber)
+		elseif RNG > 200 then
+			proceduralFunctions.makeSavanahTree(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
+		end
+
+	elseif biomeType == "FairyGrass" then ------------------------------------------------------------------------------------
+		if RNG > 950 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -2, 1)
+		elseif RNG > 700 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		elseif RNG > 500 then
+			proceduralFunctions.makeBasicBush(chunk, biomeType, plotNumber)
+		elseif RNG > 420 then
+			proceduralFunctions.makeBerryBush(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
+		end
+
+	elseif biomeType == "TwilightGrass" then ------------------------------------------------------------------------------------
+		if RNG > 950 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -3, 1)
+		elseif RNG > 700 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		elseif RNG > 500 then
+			proceduralFunctions.makeBasicBush(chunk, biomeType, plotNumber)
+		elseif RNG > 420 then
+			proceduralFunctions.makeBerryBush(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
+		end
 
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 950 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -2, 1)
-				elseif RNG > 700 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				elseif RNG > 500 then
-					ProceduralFunctions.makeBasicBush(v, BiomeType)
-				elseif RNG > 420 then
-					ProceduralFunctions.makeBerryBush(v, BiomeType)
-				end
-			end
-			
-		elseif BiomeType == "TwilightGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.TwilightGrass + math.random(0,1)
+	elseif biomeType == "CrimsonGrass" then ------------------------------------------------------------------------------------
+		if RNG > 950 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -3, 1)
+		elseif RNG > 700 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		elseif RNG > 500 then
+			proceduralFunctions.makeBasicBush(chunk, biomeType, plotNumber)
+		elseif RNG > 420 then
+			proceduralFunctions.makeBerryBush(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
+		end
 
+	elseif biomeType == "HolyGrass" then ------------------------------------------------------------------------------------
+		if RNG > 970 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -4, 1)
+		elseif RNG > 700 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
+		end
 
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 950 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -3, 1)
-				elseif RNG > 700 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				elseif RNG > 500 then
-					ProceduralFunctions.makeBasicBush(v, BiomeType)
-				elseif RNG > 420 then
-					ProceduralFunctions.makeBerryBush(v, BiomeType)
-				end
-			end
-			
-		elseif BiomeType == "CrimsonGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.CrimsonGrass + math.random(0,1)
-
-
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 950 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -3, 1)
-				elseif RNG > 700 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				elseif RNG > 500 then
-					ProceduralFunctions.makeBasicBush(v, BiomeType)
-				elseif RNG > 420 then
-					ProceduralFunctions.makeBerryBush(v, BiomeType)
-				end
-			end
-			
-		elseif BiomeType == "HolyGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.HolyGrass + math.random(0,1)
-
-
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 970 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -4, 1)
-				elseif RNG > 700 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				end
-			end
-
-		elseif BiomeType == "DarkDimensionGrass" then ------------------------------------------------------------------------------------
-			local amountOfObjects = ModuleData.BiomeObjectDensity.HolyGrass + math.random(0,1)
-
-
-			for x = 1, amountOfObjects do
-				local RNG = math.random(1,1000)
-				if RNG > 900 then
-					ProceduralFunctions.makeMiniRock(v, BiomeType, "normal", -4, 1)
-				elseif RNG > 600 then
-					ProceduralFunctions.makeDefaultTree(v, BiomeType)
-				end
-			end
+	elseif biomeType == "DarkDimensionGrass" then ------------------------------------------------------------------------------------
+		if RNG > 900 then
+			proceduralFunctions.makeMiniRock(chunk, biomeType, plotNumber, "normal", -4, 1)
+		elseif RNG > 600 then
+			proceduralFunctions.makeDefaultTree(chunk, biomeType, plotNumber)
+		else
+			numberOfObjects.Value -= 1
 		end
 	end
 end
 
 
-return module
 
+
+return module
 
 
