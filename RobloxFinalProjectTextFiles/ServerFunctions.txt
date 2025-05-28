@@ -6,18 +6,28 @@ local TweenService = game:GetService("TweenService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 
-local biomesFolder = ReplicatedStorage.Biomes
-
 local moduleData = require(ReplicatedStorage.ModuleData)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
+local playerData = require(ReplicatedStorage.PlayerData)
+
+local buyPlotProducts = moduleData.BuyPlotProducts
+local biomesFolder = ReplicatedStorage.Biomes
+local remoteEvents = game.ReplicatedStorage.RemoteEvents
+local importantValues = ReplicatedStorage.ImportantValues
+local plot = workspace.Plots
+local chunkBlock = ServerStorage.ChunkBlock
+local increment = tonumber(importantValues.Increment.Value)
+local biomeScale = tonumber(importantValues.BiomeScale.Value)
+
 
 
 local module = {}
 
 
+
 function module.getExponentialScale(rarity)
 	local u = math.random()
-	return 1 + 9 * (1 - u^rarity)
+	return 1 + 10 * (1 - u^rarity)
 end
 
 function module.colorOffsetPart(part, bottomOffset, topOffset)
@@ -159,10 +169,10 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 	return upperStemTable
 end
 
-function module.runGoldenChance(model, plotNumber)
+function module.runGoldenChance(model, plotFolder)
 	if math.random(1,128) == 1 then
 		CollectionService:AddTag(model, "Golden")
-		model.Parent = workspace.Plots["Plot"..tostring(plotNumber)].GoldenParts
+		model.Parent = plotFolder.GoldenParts
 		for i,v in model:GetDescendants() do
 			if v:IsA("Part") then
 				v.Color = Color3.fromRGB(255, 215, 0)
@@ -178,13 +188,13 @@ function module.runGoldenChance(model, plotNumber)
 end
 
 
-function module.runRainbowChance(model, plotNumber)
+function module.runRainbowChance(model, plotFolder)
 	if math.random(1,128) == 1 then
 		if CollectionService:HasTag(model, "Golden") then
 			CollectionService:RemoveTag(model, "Golden")
 		end
 		CollectionService:AddTag(model, "Rainbow")
-		model.Parent = workspace.Plots["Plot"..tostring(plotNumber)].RainbowParts
+		model.Parent = plotFolder.RainbowParts
 
 		for i,v in model:GetDescendants() do
 			
@@ -207,7 +217,7 @@ function module.finalizePosition(model, grass, scaleFactor, yOffset, rotationMul
 	model:SetAttribute("Scale", scale)
 
 	for i, v in model.PrimaryPart:GetTouchingParts() do
-		if v ~= model.Parent and v.Name == "ChunkBlock" then
+		if v ~= model.Parent and v.Parent.Name == "MainParts" then
 			local offset = math.sqrt(v:GetAttribute("yValue") - model.Parent:GetAttribute("yValue"))
 			local pivot = model:GetPivot()
 			local newPivot
@@ -258,26 +268,15 @@ function module.makeSavanahLeaf(model, biome, position)
 end
 
 
-function module.devProductManager()
-	MarketplaceService.ProcessReceipt = function(receiptInfo)
-		print(receiptInfo)
-		local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
-
-		if not player then
-			return Enum.ProductPurchaseDecision.NotProcessedYet
-		end
-
-		local productId = receiptInfo.ProductId
-
-		if productId == 12345678 then 
 
 
-			return Enum.ProductPurchaseDecision.PurchaseGranted
-		end
 
-		return Enum.ProductPurchaseDecision.NotProcessedYet
-	end
-end
+
+
+
+
+
+
 
 function module.changePlayersMoney(player, amount)
 	local leaderstats = player:FindFirstChild("leaderstats")
@@ -286,6 +285,207 @@ function module.changePlayersMoney(player, amount)
 end
 
 
+
+
+
+
+
+function module.makeMap(plotNumber, tableOfCoords, player)
+	local heightScale = RF.getRandomFloat(.022, .026)
+	importantValues.HeightScale.Value = heightScale
+	local plotFolder = plot["Plot"..plotNumber]
+	
+
+
+	for biomeName, chanceData in moduleData.BiomeChanceData do
+		local biomeSeed
+		local savedBiomeSeed = playerData["BiomeSeeds"][player.UserId][biomeName]
+		if savedBiomeSeed then
+			biomeSeed = savedBiomeSeed
+		else
+			biomeSeed = math.random(1,100000000)
+			playerData["BiomeSeeds"][player.UserId][biomeName] = biomeSeed
+		end
+	end
+
+
+	local heightSeed
+	local savedHeightSeed = playerData["HeightSeed"][player.UserId][1]
+	if savedHeightSeed then
+		heightSeed = savedHeightSeed
+	else
+		heightSeed = math.random(1,100000000)
+		while module.checkHeightSeed(heightScale, heightSeed, {1,1}) == false do
+			heightSeed = math.random(1,100000000)
+		end
+		playerData["HeightSeed"][player.UserId][1] = heightSeed
+	end
+
+
+	for i,v in tableOfCoords do
+		module.AddChunk(v[1], v[2], plotNumber, heightSeed, heightScale, player)
+	end
+
+
+
+end
+
+
+
+function module.checkHeightSeed(scale, seed, coords)
+	local x, z = coords[1] * increment, coords[2]*increment
+
+	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
+	if noiseLocation < -0.5 or noiseLocation > 0.5 then
+		return false
+	else
+		return true
+	end
+end
+
+
+function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, player)
+	local part = chunkBlock:Clone()
+	local plotFolder = plot["Plot"..plotNumber]
+	part.Name = coord1..","..coord2..","..plotNumber
+
+	local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
+	
+	module.makeHeightNoise(x, z, heightScale, heightSeed, plotFolder, part)
+
+
+	for i,v in playerData.BiomeSeeds[player.UserId] do
+		module.makeBiomeNoise(x, z, biomeScale, i, v, part)
+	end
+
+	module.checkEmptyChunk(part)
+end
+
+
+
+function module.makeHeightNoise(x, z, scale, seed, plotFolder, part)
+	print(x,z,seed,increment,scale)
+	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
+	local normalized = noiseLocation + 1           
+	local y = normalized * 100
+
+	part:SetAttribute("yValue", y)
+
+
+
+	local yMainPartLocation = y/2
+
+	part.Size = Vector3.new(increment + RF.getRandomFloat(0, increment), y, increment + RF.getRandomFloat(0, increment))
+	part.Anchored = true
+	part.Position = Vector3.new(x, yMainPartLocation, z)
+	part.Parent = plotFolder.MainParts
+
+	if noiseLocation < -0.4 then
+		CollectionService:AddTag(part, "Water")
+
+		part.Material = Enum.Material.Sand
+		part.Color = Color3.fromRGB(199, 159, 119)
+
+		module.colorOffsetPart(part, -15, 15)
+
+		local waterBlock = ServerStorage.WaterBlock:Clone()
+		waterBlock.Parent = part
+		local ySize = 60 - (yMainPartLocation + part.Size.Y/2)
+		local yPosition = yMainPartLocation + part.Size.Y/2 + ySize/2
+		waterBlock.Size = Vector3.new(part.Size.X, ySize, part.Size.Z)
+		waterBlock.Position = Vector3.new(x, yPosition, z)
+		module.colorOffsetPart(waterBlock, -15, 15)
+	end
+end
+
+
+
+function module.makeBiomeNoise(x, z, scale, biomeName, seed, part)
+	if CollectionService:HasTag(part, "Water")  then
+		return
+	end
+	
+	local chanceData = moduleData.BiomeChanceData[biomeName]
+	scale *= chanceData[2]
+	local noiseLocation = math.noise((x + seed) / (increment) * scale, (z + seed) / (increment) * scale)
+
+	if noiseLocation >= chanceData[1] then
+		module.replaceBlock(part, ReplicatedStorage.Biomes[biomeName])
+	end
+end
+
+
+
+function module.replaceBlock(part, GrassType)
+	for i,v in part:GetChildren() do
+		v:Destroy()
+	end
+
+	for i,v in moduleData.GrassTypes do
+		if part:HasTag(v) then
+			CollectionService:RemoveTag(part, v)
+		end
+	end
+
+	CollectionService:AddTag(part, GrassType.Name)
+
+
+	local offsetColor1 = math.random(-10,10)/255
+	local red = math.clamp(GrassType.Dirt.Color.R + offsetColor1, 0, 1)
+	local green = GrassType.Dirt.Color.G
+	local blue = math.clamp(GrassType.Dirt.Color.B + offsetColor1, 0, 1)
+	part.Color = Color3.new(red, green, blue)
+	part.Material = GrassType.Dirt.Material
+
+	local GrassClone = GrassType.Grass:Clone()
+	GrassClone.Parent = part
+	GrassClone.Size = Vector3.new(part.Size.X, 1, part.Size.Z)
+	GrassClone.Position = Vector3.new(part.Position.X, part.Position.Y + part.Size.Y/2 + RF.getRandomFloat(0.45,0.5), part.Position.Z)
+
+
+	local offsetColor2 = math.random(-15,15)/255
+
+	local red = math.clamp(GrassClone.Color.R + offsetColor2, 0, 1)
+	local green = math.clamp(GrassClone.Color.G + offsetColor2, 0, 1)
+	local blue = math.clamp(GrassClone.Color.B + offsetColor2, 0, 1)
+	GrassClone.Color = Color3.new(red, green, blue)
+end
+
+
+
+function module.checkEmptyChunk(chunkPart)
+	local hasTag = false
+	for x,y in moduleData.GrassTypes do
+		if chunkPart:HasTag(y) then
+			hasTag = true
+		end
+	end
+	if hasTag == false then
+		module.replaceBlock(chunkPart, ReplicatedStorage.Biomes.NormalGrass)
+		CollectionService:AddTag(chunkPart, "NormalGrass")
+	end
+end
+
+
+
+function module.deleteMap(plotFolder)
+	local tableOfPartsFolders = {"MainParts", "GoldenParts", "RainbowParts", "BuyUIFolder", "SeedDataFolder"}
+
+	for i, v in tableOfPartsFolders do
+		for x, y in plotFolder[v]:GetChildren() do
+			if y:IsA("Highlight") == false then
+				y:Destroy()
+			end
+		end
+	end
+
+	plotFolder.NumberOfObjects.Value = 0
+end
+
+
+
+
 return module
+
 
 

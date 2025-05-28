@@ -4,9 +4,9 @@ local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local CollectionService = game:GetService("CollectionService")
+local MarketplaceService =  game:GetService("MarketplaceService")
 
 
-local mainModuleFunctions = require(ServerStorage.MainModuleFunctions)
 local proceduralFunctions = require(ServerStorage.ProceduralFunctions)
 local playerData = require(ReplicatedStorage.PlayerData)
 local moduleData = require(ReplicatedStorage.ModuleData)
@@ -14,9 +14,10 @@ local RF = require(ReplicatedStorage.ReplicatedFunctions)
 local SF = require(ServerStorage.ServerFunctions)
 local terrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
 
-
+local buyPlotProducts = moduleData.BuyPlotProducts
 local plots = workspace.Plots
 local remoteEvents = ReplicatedStorage.RemoteEvents
+local importantValues = ReplicatedStorage.ImportantValues
 local tableOfOccupiedPlots = {}
 
 
@@ -50,8 +51,14 @@ end
 
 
 Players.PlayerAdded:Connect(function(player)
-	local playerId = Players:GetUserIdFromNameAsync(player.Name)
+	local userId = player.UserId
 	
+	for i,v in playerData do
+		v[userId] = {}
+	end
+
+
+
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
@@ -78,7 +85,7 @@ Players.PlayerAdded:Connect(function(player)
 	
 	local playerPlotNumber = playerNumber.Value
 
-	local playerPlot = workspace.Plots["Plot"..tostring(playerPlotNumber)]
+	local playerPlot = workspace.Plots["Plot"..playerPlotNumber]
 	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = player.Name.."'s Plot"
 
 	player.CharacterAdded:Connect(function(character)
@@ -88,33 +95,39 @@ Players.PlayerAdded:Connect(function(player)
 		tool.Parent = player:WaitForChild("Backpack")
 	end)
 
-	playerData[playerId] = {}
-	local playerDataTable = playerData[playerId]
-	playerDataTable["OwnedChunks"] = {}
+	
+	local ownedChunks = playerData["OwnedChunks"][userId]
 	for i = 1, 25 do
 		for x = 1, 25 do
-			table.insert(playerDataTable["OwnedChunks"], {i,x})
+			table.insert(ownedChunks, {i,x})
 		end
 	end
-	remoteEvents.UpdateClientData:FireClient(player, playerId, playerData[playerId])
+
+	remoteEvents.UpdateClientData:FireClient(player, userId, "OwnedChunks", ownedChunks)
 	
-	mainModuleFunctions.makeMap(playerPlotNumber, player, playerDataTable["OwnedChunks"])
-
-
-
+	SF.makeMap(playerPlotNumber, ownedChunks, player)
 end)
 
 
 
 Players.PlayerRemoving:Connect(function(player)
-	local playerPlotNumber = player.PlotNumber.Value
-	local playerPlot = workspace.Plots["Plot"..tostring(playerPlotNumber)]
-	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = "Empty Plot"
+	local userId = player.UserId
+	local plotNumber = player.PlotNumber.Value
+	local plotFolder = workspace.Plots["Plot"..plotNumber]
+	
+	for i,v in playerData do
+		v[userId] = nil
+	end
+	
+	plotFolder.Sign.Text.SurfaceGui.TextLabel.Text = "Empty Plot"
 
-	mainModuleFunctions.deleteMap(playerPlotNumber)
+	SF.deleteMap(plotFolder)
 
 	tableOfOccupiedPlots[player.PlotNumber.Value] = "Open" 
+	playerData[player.UserId] = nil
 end)
+
+
 
 
 
@@ -122,8 +135,88 @@ remoteEvents.TeleportHome.OnServerEvent:Connect(function(player)
 	player.Character:PivotTo(CFrame.new(Vector3.new(0, 132, 0)))
 end)
 
+remoteEvents.CurrentBuyChunk.OnServerEvent:Connect(function(player, buyChunk)
+	playerData["CurrentBuyChunk"][player.UserId]= buyChunk
+end)
 
-SF.devProductManager()
+
+
+
+MarketplaceService.ProcessReceipt = function(receiptInfo)
+	print(receiptInfo)
+	local userId = receiptInfo.PlayerId
+	local player = Players:GetPlayerByUserId(userId)
+
+	if not player then
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+
+	local productId = receiptInfo.ProductId
+
+	for i,v in buyPlotProducts do
+		if productId == nil then
+			warn("nil")
+		elseif productId == v[1] then
+			local coordinateString = playerData["CurrentBuyChunk"][receiptInfo.PlayerId]
+
+			if coordinateString then
+				local splitTable = string.split(coordinateString, ",")
+				local coord1 = tonumber(splitTable[1])
+				local coord2 = tonumber(splitTable[2])
+				local plotNumber = tonumber(splitTable[3])
+
+				local buyPlotNumber = math.max(coord1, coord2)
+				
+				local price
+				if buyPlotNumber > 21 then
+					price  = 250000
+				else
+					price = buyPlotProducts[buyPlotNumber][1]
+				end
+
+
+				--if price == receiptInfo.RobuxSpent then
+
+					local biomes = playerData["BiomeSeeds"][userId]
+					local heightSeed = playerData["HeightSeed"][userId][1]
+
+					SF.AddChunk(coord1, coord2, plotNumber, heightSeed, importantValues.HeightScale.Value, player)
+				--end
+			end
+			return Enum.ProductPurchaseDecision.PurchaseGranted
+		end
+	end
+
+
+
+	return Enum.ProductPurchaseDecision.NotProcessedYet
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -132,35 +225,37 @@ while true do
 	for plotNumber,v in ipairs(tableOfOccupiedPlots) do
 		if v == "Closed" then
 
-			local currentPlot = plots["Plot"..tostring(plotNumber)]
-			local tableOfChunks = currentPlot.MainParts:GetChildren()
+			local plotFolder = plots["Plot"..plotNumber]
+			local tableOfChunks = plotFolder.MainParts:GetChildren()
 			local tableOfDensities = {}
 			local maxObjects = 0
 			
 			for x,y in ipairs(tableOfChunks) do
 				local biomeType = y:GetTags()[1]
-				local objectDensity = moduleData.BiomeObjectDensity[biomeType]
 
-				table.insert(tableOfDensities, objectDensity)
-				maxObjects += objectDensity
+				if biomeType then
+					local objectDensity = moduleData.BiomeObjectDensity[biomeType]
+					table.insert(tableOfDensities, objectDensity)
+					maxObjects += objectDensity
+				end
 			end
 
-			local currentObjects = currentPlot.NumberOfObjects.Value
+			local currentObjects = plotFolder.NumberOfObjects.Value
 
 			local fillRatio = currentObjects/maxObjects
 
-			if (math.random())^2 >= fillRatio then
+			if math.random() >= fillRatio then
 				local RNG = math.random(1, maxObjects)
 				local chunkPos = SF.findListPos(RNG, 1, tableOfDensities)
 				local chunk = tableOfChunks[chunkPos]
 
-				terrainDecorationsManager.decorateMap(chunk, plotNumber)
-				currentPlot.NumberOfObjects.Value += 1
+				terrainDecorationsManager.decorateMap(chunk, plotFolder)
+				plotFolder.NumberOfObjects.Value += 1
 			end
 			
 			
 			
 		end
 	end
-	task.wait(RF.getRandomFloat(0.3, 0.7))
+	task.wait()
 end

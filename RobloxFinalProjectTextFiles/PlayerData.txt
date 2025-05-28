@@ -1,0 +1,12 @@
+local module = 
+	
+{
+	["OwnedChunks"] = {},
+	["ChestData"] = {},
+	["OuterChunkPrices"] = {},
+	["BiomeSeeds"] = {},
+	["CurrentBuyChunk"] = {},
+	["HeightSeed"] = {}
+}
+
+return module

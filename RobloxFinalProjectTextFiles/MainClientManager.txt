@@ -13,8 +13,8 @@ local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 local CF = require(StarterPlayer.StarterPlayerScripts:WaitForChild("ClientFunctions"))
 
 
-remoteEvents:WaitForChild("UpdateClientData").OnClientEvent:Connect(function(playerId, data)
-	playerData[playerId] = data
+remoteEvents:WaitForChild("UpdateClientData").OnClientEvent:Connect(function(playerId, tableType, data)
+	playerData[tableType][playerId] = data
 end)
 
 
@@ -40,10 +40,18 @@ end)
 
 
 
-
-
-while task.wait(5) do
+while true do
+	task.wait(1)
 	CF.displayBuyPlots()
-
+	task.wait(3)
+	for i,v in localPlayer:WaitForChild("PlayerGui"):WaitForChild("BillboardGuiStorage"):GetChildren() do
+		v:Destroy()
+	end
 end
+
+
+
+
+
+
 

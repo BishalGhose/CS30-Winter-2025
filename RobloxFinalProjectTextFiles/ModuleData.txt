@@ -146,22 +146,6 @@ module.OreNumber =
 
 
 
-module.MoneyPriceChunks = 
-{
-	[1] = 	0,
-	[2] = 	15,
-	[3] = 	127,
-	[4] = 	1321,
-	[5] = 	16345,
-	[6] = 	"Lapis",
-	[7] = 	"Obsidian",
-	[8] = 	"Emerald",
-	[9] = 	"Amethyst",
-	[10] = 	"Ruby",
-	[11] = 	"Diamond",
-}
-
-
 module.BuyPlotProducts = 
 {
 	[1] 	= nil,
@@ -186,6 +170,21 @@ module.BuyPlotProducts =
 	[20] 	= {3292885442, 150000},
 	[21] 	= {3292885440, 250000}
 }
+
+
+module.PlayerDataTables = 
+{
+
+
+
+
+}
+
+module.PriceCache = {}
+
+
+
+
 
 
 
