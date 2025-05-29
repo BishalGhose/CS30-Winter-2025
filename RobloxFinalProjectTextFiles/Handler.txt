@@ -14,14 +14,17 @@ local RF = require(ReplicatedStorage.ReplicatedFunctions)
 local SF = require(ServerStorage.ServerFunctions)
 local terrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
 
+local remoteEvents = ReplicatedStorage.RemoteEvents
+local updateClientData = remoteEvents.UpdateClientData
+local currentChunkRemote = remoteEvents.CurrentChunkRemote
+local teleportHome = remoteEvents.TeleportHome
+local outerChunkPrice = remoteEvents.OuterChunkPrice
+
 local buyPlotProducts = moduleData.BuyPlotProducts
 local plots = workspace.Plots
-local remoteEvents = ReplicatedStorage.RemoteEvents
 local importantValues = ReplicatedStorage.ImportantValues
+
 local tableOfOccupiedPlots = {}
-
-
-
 
 for i=1, 4 do
 	table.insert(tableOfOccupiedPlots, "Open")
@@ -97,13 +100,13 @@ Players.PlayerAdded:Connect(function(player)
 
 	
 	local ownedChunks = playerData["OwnedChunks"][userId]
-	for i = 1, 25 do
-		for x = 1, 25 do
+	for i = 1, 1 do
+		for x = 1, 1 do
 			table.insert(ownedChunks, {i,x})
 		end
 	end
-
-	remoteEvents.UpdateClientData:FireClient(player, userId, "OwnedChunks", ownedChunks)
+	print(ownedChunks)
+	updateClientData:FireClient(player, userId, "OwnedChunks", ownedChunks)
 	
 	SF.makeMap(playerPlotNumber, ownedChunks, player)
 end)
@@ -131,12 +134,19 @@ end)
 
 
 
-remoteEvents.TeleportHome.OnServerEvent:Connect(function(player)
+
+
+teleportHome.OnServerEvent:Connect(function(player)
 	player.Character:PivotTo(CFrame.new(Vector3.new(0, 132, 0)))
 end)
 
-remoteEvents.CurrentBuyChunk.OnServerEvent:Connect(function(player, buyChunk)
+currentChunkRemote.OnServerEvent:Connect(function(player, buyChunk)
 	playerData["CurrentBuyChunk"][player.UserId]= buyChunk
+end)
+
+outerChunkPrice.OnServerEvent:Connect(function(coords, buyplotnumber)
+	local basePrice = RF.priceCacher(buyplotnumber)
+	local newPrice = math.round(basePrice * RF.getRandomFloat(0.5, 1.5))
 end)
 
 
@@ -173,14 +183,16 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 				else
 					price = buyPlotProducts[buyPlotNumber][1]
 				end
-
+					
 
 				--if price == receiptInfo.RobuxSpent then
-
+					currentChunkRemote:FireClient(player, coordinateString)
 					local biomes = playerData["BiomeSeeds"][userId]
 					local heightSeed = playerData["HeightSeed"][userId][1]
-
-					SF.AddChunk(coord1, coord2, plotNumber, heightSeed, importantValues.HeightScale.Value, player)
+					
+					
+					table.insert(playerData["OwnedChunks"][userId], {coord1, coord2})
+					SF.AddChunk(coord1, coord2, plotNumber, heightSeed, importantValues.HeightScale.Value, true, player)
 				--end
 			end
 			return Enum.ProductPurchaseDecision.PurchaseGranted

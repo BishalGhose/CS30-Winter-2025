@@ -21,7 +21,7 @@ local mainParts = currentPlot:WaitForChild("MainParts")
 local buyUIFolder = currentPlot:WaitForChild("BuyUIFolder")
 local outlineBlock = ReplicatedStorage:WaitForChild("OutlineBlock")
 local buyPlotUI = StarterGui:WaitForChild("BuyPlotUI")
-local playerId = Players:GetUserIdFromNameAsync(localPlayer.Name)
+local playerId = localPlayer.UserId
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local importantValues = ReplicatedStorage:WaitForChild("ImportantValues")
 local priceCache = moduleData["PriceCache"]
@@ -49,7 +49,13 @@ end
 
 
 function module.displayBuyPlots()
+	for i,v in localPlayer:WaitForChild("PlayerGui"):WaitForChild("BillboardGuiStorage"):GetChildren() do
+		v:Destroy()
+	end
+
+	print(playerData)
 	local coordinatesTable = playerData["OwnedChunks"][playerId]
+	print(coordinatesTable)
 	local buyCoordinates = {}
 
 
@@ -112,6 +118,7 @@ function module.putIn3dSpace(buyCoordinates)
 
 
 		local buyPlotUIClone = buyPlotUI:Clone()
+		buyPlotUIClone.Name = v[1]..","..v[2]..","..plotNumber
 		buyPlotUIClone.Parent = playerGui:WaitForChild("BillboardGuiStorage")
 		buyPlotUIClone.Adornee = outlineBlockClone
 		buyPlotUIClone.Enabled = true

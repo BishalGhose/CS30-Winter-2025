@@ -6,20 +6,21 @@ local TweenService = game:GetService("TweenService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 
+
 local moduleData = require(ReplicatedStorage.ModuleData)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
 local playerData = require(ReplicatedStorage.PlayerData)
 
 local buyPlotProducts = moduleData.BuyPlotProducts
 local biomesFolder = ReplicatedStorage.Biomes
-local remoteEvents = game.ReplicatedStorage.RemoteEvents
 local importantValues = ReplicatedStorage.ImportantValues
 local plot = workspace.Plots
 local chunkBlock = ServerStorage.ChunkBlock
 local increment = tonumber(importantValues.Increment.Value)
 local biomeScale = tonumber(importantValues.BiomeScale.Value)
 
-
+local remoteEvents = game.ReplicatedStorage.RemoteEvents
+local updateClientData = remoteEvents.UpdateClientData
 
 local module = {}
 
@@ -323,7 +324,7 @@ function module.makeMap(plotNumber, tableOfCoords, player)
 
 
 	for i,v in tableOfCoords do
-		module.AddChunk(v[1], v[2], plotNumber, heightSeed, heightScale, player)
+		module.AddChunk(v[1], v[2], plotNumber, heightSeed, heightScale, false, player)
 	end
 
 
@@ -344,7 +345,8 @@ function module.checkHeightSeed(scale, seed, coords)
 end
 
 
-function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, player)
+function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, animation, player)
+	local userId = player.UserId
 	local part = chunkBlock:Clone()
 	local plotFolder = plot["Plot"..plotNumber]
 	part.Name = coord1..","..coord2..","..plotNumber
@@ -359,6 +361,30 @@ function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, pl
 	end
 
 	module.checkEmptyChunk(part)
+
+	if animation then
+		local grass = part.Grass
+		local originalPos = part.Position
+		local startingPos = originalPos + Vector3.new(0,-30,0)
+		part.Position =  startingPos
+		part.Transparency = 1
+		grass.Transparency = 1
+		grass.CanCollide = false
+		
+		local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Cubic, Enum.EasingDirection.In, 0, false, 0)
+		local goal = {Transparency = 0, Position = originalPos}
+		local tween = TweenService:Create(part, tweenInfo, goal)
+		tween:Play()
+
+		local connection
+		connection = tween.Completed:Connect(function()
+			grass.Transparency = 0
+			grass.CanCollide = true
+			updateClientData:FireClient(player, userId, "OwnedChunks", playerData["OwnedChunks"][userId])
+			connection:Disconnect()
+			connection = nil
+		end)
+	end
 end
 
 
@@ -486,6 +512,3 @@ end
 
 
 return module
-
-
-

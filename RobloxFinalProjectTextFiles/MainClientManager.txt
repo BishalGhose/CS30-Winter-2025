@@ -2,10 +2,17 @@ local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
+local StarterGui = game:GetService("StarterGui")
 
 local localPlayer = Players.LocalPlayer
+local playerGui = localPlayer:WaitForChild("PlayerGui")
 local mouse = localPlayer:GetMouse()
+local plot = workspace:WaitForChild("Plots")
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local currentChunkRemote = remoteEvents:WaitForChild("CurrentChunkRemote")
+local updateClientData = remoteEvents:WaitForChild("UpdateClientData")
+
+
 
 local playerData = require(ReplicatedStorage:WaitForChild("PlayerData"))
 local moduleData = require(ReplicatedStorage:WaitForChild("ModuleData"))
@@ -13,11 +20,17 @@ local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 local CF = require(StarterPlayer.StarterPlayerScripts:WaitForChild("ClientFunctions"))
 
 
-remoteEvents:WaitForChild("UpdateClientData").OnClientEvent:Connect(function(playerId, tableType, data)
+updateClientData.OnClientEvent:Connect(function(playerId, tableType, data)
 	playerData[tableType][playerId] = data
+	if tableType == "OwnedChunks" then
+		CF.displayBuyPlots() 
+	end
 end)
 
+currentChunkRemote.OnClientEvent:Connect(function(coordinateString)
+	playerGui:WaitForChild("BillboardGuiStorage"):FindFirstChild(coordinateString):Destroy()
 
+end)
 
 
 
@@ -25,14 +38,14 @@ mouse.Button1Down:Connect(function()
 	local model = RF.checkBreakableHierarchy(mouse.Target)
 	if model then
 		local hitPos = mouse.Hit.Position
-		
+
 		local tapPart = game.Workspace:WaitForChild("TapPart")
 		local attachment = tapPart:WaitForChild("Attachment")
 		local particle = attachment:WaitForChild("ParticleEmitter")
 		tapPart.Position = hitPos
 		particle:Emit(1)
 		RF.shakeModel(model)
-		
+
 		RF.breakModel(model)
 	end
 end)
@@ -40,14 +53,6 @@ end)
 
 
 
-while true do
-	task.wait(1)
-	CF.displayBuyPlots()
-	task.wait(3)
-	for i,v in localPlayer:WaitForChild("PlayerGui"):WaitForChild("BillboardGuiStorage"):GetChildren() do
-		v:Destroy()
-	end
-end
 
 
 
