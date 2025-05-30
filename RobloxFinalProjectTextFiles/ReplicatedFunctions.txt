@@ -90,5 +90,48 @@ function module.priceCacher(buyPlotNumber)
 	end
 end
 
+function module.getBuyCoordinates(coordinatesTable)
+	local buyCoordinates = {}
+	for i,v in coordinatesTable do
+		local downOffset = 1
+		local leftOffset = 1
+		if v[1] == 1 then
+			downOffset = 0 
+		end
+		if v[2] == 1 then
+			leftOffset = 0
+		end
+
+		local offsetCoords = 
+			{
+				{v[1] + 1, v[2]},
+				{v[1], v[2] + 1},
+				{v[1] - downOffset, v[2]},
+				{v[1], v[2] - leftOffset}
+			}
+
+		for i,v in offsetCoords do
+			if module.checkCoordinates(v, coordinatesTable, buyCoordinates) then
+				table.insert(buyCoordinates, v)
+			end
+		end
+	end
+	return buyCoordinates
+end
+
+
+function module.checkCoordinates(coord, coordinatesTable, buyCoordinates)
+	for i,v in coordinatesTable do
+		if coord[1] == v[1] and coord[2] == v[2] then
+			return false
+		end
+	end
+	for i,v in buyCoordinates do
+		if coord[1] == v[1] and coord[2] == v[2] then
+			return false
+		end
+	end
+	return true
+end
 
 return module

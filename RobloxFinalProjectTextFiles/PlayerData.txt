@@ -3,10 +3,12 @@ local module =
 {
 	["OwnedChunks"] = {},
 	["ChestData"] = {},
-	["OuterChunkPrices"] = {},
+	["ChunkCoinPrices"] = {},
 	["BiomeSeeds"] = {},
 	["CurrentBuyChunk"] = {},
-	["HeightSeed"] = {}
+	["HeightSeed"] = {},
+	["Coins"] = {},
+	["ChunkSizes"] = {}
 }
 
 return module

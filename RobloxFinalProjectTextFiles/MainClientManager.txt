@@ -5,33 +5,45 @@ local StarterPlayer = game:GetService("StarterPlayer")
 local StarterGui = game:GetService("StarterGui")
 
 local localPlayer = Players.LocalPlayer
+local userId = localPlayer.UserId
 local playerGui = localPlayer:WaitForChild("PlayerGui")
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local coins = leaderstats:WaitForChild("Coins")
 local mouse = localPlayer:GetMouse()
 local plot = workspace:WaitForChild("Plots")
+local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
+local currentPlot = plot:WaitForChild("Plot"..plotNumber)
+local buyUIFolder = currentPlot:WaitForChild("BuyUIFolder")
+
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local currentChunkRemote = remoteEvents:WaitForChild("CurrentChunkRemote")
 local updateClientData = remoteEvents:WaitForChild("UpdateClientData")
-
-
+local coinsBuyChunk = remoteEvents:WaitForChild("CoinsBuyChunk")
+local destroySkeleton = remoteEvents:WaitForChild("DestroySkeleton")
 
 local playerData = require(ReplicatedStorage:WaitForChild("PlayerData"))
 local moduleData = require(ReplicatedStorage:WaitForChild("ModuleData"))
 local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 local CF = require(StarterPlayer.StarterPlayerScripts:WaitForChild("ClientFunctions"))
 
+destroySkeleton.OnClientEvent:Connect(function(fullCoord)
+	local skeleton = buyUIFolder:FindFirstChild(fullCoord)
+	if skeleton then
+		skeleton:Destroy()
+	end
+end)
 
-updateClientData.OnClientEvent:Connect(function(playerId, tableType, data)
-	playerData[tableType][playerId] = data
+
+updateClientData.OnClientEvent:Connect(function(tableType, data)
+	playerData[tableType][userId] = data
 	if tableType == "OwnedChunks" then
-		CF.displayBuyPlots() 
+		CF.displayBuyChunks() 
 	end
 end)
 
 currentChunkRemote.OnClientEvent:Connect(function(coordinateString)
 	playerGui:WaitForChild("BillboardGuiStorage"):FindFirstChild(coordinateString):Destroy()
-
 end)
-
 
 
 mouse.Button1Down:Connect(function()

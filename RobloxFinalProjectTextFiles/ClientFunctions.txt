@@ -10,7 +10,10 @@ local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 local moduleData = require(ReplicatedStorage.ModuleData)
 local playerData = require(ReplicatedStorage.PlayerData)
 
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local outerChunkPrice = remoteEvents:WaitForChild("OuterChunkPrice")
 
+local chunkSizes = playerData["ChunkSizes"]
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 local mouse = localPlayer:GetMouse()
@@ -21,8 +24,7 @@ local mainParts = currentPlot:WaitForChild("MainParts")
 local buyUIFolder = currentPlot:WaitForChild("BuyUIFolder")
 local outlineBlock = ReplicatedStorage:WaitForChild("OutlineBlock")
 local buyPlotUI = StarterGui:WaitForChild("BuyPlotUI")
-local playerId = localPlayer.UserId
-local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local userId = localPlayer.UserId
 local importantValues = ReplicatedStorage:WaitForChild("ImportantValues")
 local priceCache = moduleData["PriceCache"]
 
@@ -30,63 +32,25 @@ local priceCache = moduleData["PriceCache"]
 
 local module = {}
 
-function module.checkCoordinates(coord, coordinatesTable, buyCoordinates)
-	for i,v in coordinatesTable do
-		if coord[1] == v[1] and coord[2] == v[2] then
-			return false
-		end
-	end
-	for i,v in buyCoordinates do
-		if coord[1] == v[1] and coord[2] == v[2] then
-			return false
-		end
-	end
-	return true
-end
 
 
 
 
 
-function module.displayBuyPlots()
+
+function module.displayBuyChunks()
 	for i,v in localPlayer:WaitForChild("PlayerGui"):WaitForChild("BillboardGuiStorage"):GetChildren() do
 		v:Destroy()
 	end
 
-	print(playerData)
-	local coordinatesTable = playerData["OwnedChunks"][playerId]
-	print(coordinatesTable)
-	local buyCoordinates = {}
+	local coordinatesTable = playerData["OwnedChunks"][userId]
+	local buyCoordinates = RF.getBuyCoordinates(coordinatesTable)
 
 
 	for i,v in buyUIFolder:GetChildren() do
 		v:Destroy()
 	end
 
-	for i,v in coordinatesTable do
-		local downOffset = 1
-		local leftOffset = 1
-		if v[1] == 1 then
-			downOffset = 0 
-		end
-		if v[2] == 1 then
-			leftOffset = 0
-		end
-
-		local offsetCoords = 
-			{
-				{v[1] + 1, v[2]},
-				{v[1], v[2] + 1},
-				{v[1] - downOffset, v[2]},
-				{v[1], v[2] - leftOffset}
-			}
-
-		for i,v in offsetCoords do
-			if module.checkCoordinates(v, coordinatesTable, buyCoordinates) then
-				table.insert(buyCoordinates, v)
-			end
-		end
-	end
 	module.putIn3dSpace(buyCoordinates)
 end
 
@@ -94,7 +58,9 @@ end
 
 
 function module.putIn3dSpace(buyCoordinates)
-	for i,v in buyCoordinates do
+	local priceTable = outerChunkPrice:InvokeServer(buyCoordinates)
+
+	for i,v in ipairs(buyCoordinates) do
 		local increment = importantValues:WaitForChild("Increment").Value
 		local x, z = RF.coordinateScale(increment, plotNumber, v)
 
@@ -112,7 +78,8 @@ function module.putIn3dSpace(buyCoordinates)
 
 		local outlineBlockClone = outlineBlock:Clone()
 		outlineBlockClone.Parent = buyUIFolder
-		outlineBlockClone.Size = Vector3.new(increment, ySize, increment)
+		local coordSize = chunkSizes[userId][v[1]..","..v[2]]
+		outlineBlockClone.Size = Vector3.new(coordSize[1], ySize, coordSize[2])
 		outlineBlockClone.Position = Vector3.new(x, yPosition, z)
 		outlineBlockClone.Name = v[1]..","..v[2]..","..plotNumber
 
@@ -126,15 +93,9 @@ function module.putIn3dSpace(buyCoordinates)
 
 		local buyPlotNumber = math.max(v[1], v[2])
 
-		local price
-		if priceCache[buyPlotNumber] then
-			price = priceCache[buyPlotNumber]
-		else
-			price = buyPlotNumber ^ 6
-			priceCache[buyPlotNumber] = price
-		end
 
-		buyPlotUIClone:WaitForChild("PriceFrame"):WaitForChild("PriceText").Text = "$ "..RF.addCommas(price)
+		
+		buyPlotUIClone:WaitForChild("PriceFrame"):WaitForChild("PriceText").Text = "$ "..RF.addCommas(priceTable[i])
 		
 		if buyPlotNumber > 21 then
 			buyPlotNumber = 21

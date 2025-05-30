@@ -11,6 +11,12 @@ local moduleData = require(ReplicatedStorage.ModuleData)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
 local playerData = require(ReplicatedStorage.PlayerData)
 
+local remoteEvents = game.ReplicatedStorage.RemoteEvents
+local updateClientData = remoteEvents.UpdateClientData
+local currentChunkRemote = remoteEvents.CurrentChunkRemote
+local destroySkeleton = remoteEvents.DestroySkeleton
+
+local chunkSizes = playerData["ChunkSizes"]
 local buyPlotProducts = moduleData.BuyPlotProducts
 local biomesFolder = ReplicatedStorage.Biomes
 local importantValues = ReplicatedStorage.ImportantValues
@@ -19,8 +25,6 @@ local chunkBlock = ServerStorage.ChunkBlock
 local increment = tonumber(importantValues.Increment.Value)
 local biomeScale = tonumber(importantValues.BiomeScale.Value)
 
-local remoteEvents = game.ReplicatedStorage.RemoteEvents
-local updateClientData = remoteEvents.UpdateClientData
 
 local module = {}
 
@@ -316,7 +320,7 @@ function module.makeMap(plotNumber, tableOfCoords, player)
 		heightSeed = savedHeightSeed
 	else
 		heightSeed = math.random(1,100000000)
-		while module.checkHeightSeed(heightScale, heightSeed, {1,1}) == false do
+		while module.checkHeightSeed(heightScale, heightSeed, plotNumber, {1,1}) == false do
 			heightSeed = math.random(1,100000000)
 		end
 		playerData["HeightSeed"][player.UserId][1] = heightSeed
@@ -333,8 +337,8 @@ end
 
 
 
-function module.checkHeightSeed(scale, seed, coords)
-	local x, z = coords[1] * increment, coords[2]*increment
+function module.checkHeightSeed(scale, seed, plotNumber, coords)
+	local x, z = RF.coordinateScale(increment, plotNumber, coords)
 
 	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
 	if noiseLocation < -0.5 or noiseLocation > 0.5 then
@@ -349,59 +353,72 @@ function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, an
 	local userId = player.UserId
 	local part = chunkBlock:Clone()
 	local plotFolder = plot["Plot"..plotNumber]
-	part.Name = coord1..","..coord2..","..plotNumber
+	local fullCoord = coord1..","..coord2..","..plotNumber
+	part.Name = fullCoord
 
-	local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
 	
-	module.makeHeightNoise(x, z, heightScale, heightSeed, plotFolder, part)
+	module.makeHeightNoise(coord1, coord2, heightScale, heightSeed, plotNumber, part, userId)
 
 
 	for i,v in playerData.BiomeSeeds[player.UserId] do
-		module.makeBiomeNoise(x, z, biomeScale, i, v, part)
+		module.makeBiomeNoise(coord1, coord2, biomeScale, i, v, part, plotNumber)
 	end
 
 	module.checkEmptyChunk(part)
 
 	if animation then
-		local grass = part.Grass
-		local originalPos = part.Position
-		local startingPos = originalPos + Vector3.new(0,-30,0)
-		part.Position =  startingPos
-		part.Transparency = 1
-		grass.Transparency = 1
-		grass.CanCollide = false
+		table.insert(playerData["OwnedChunks"][userId], {coord1, coord2})
+		for i,v in RF.getBuyCoordinates(playerData["OwnedChunks"][userId]) do
+			if chunkSizes[userId][v[1]..","..v[2]] == nil then
+				module.setChunkSize(v[1], v[2], userId)
+			end
+		end
+		updateClientData:FireClient(player, "ChunksSizes", chunkSizes[userId])
+		destroySkeleton:FireClient(player, fullCoord)
 		
-		local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Cubic, Enum.EasingDirection.In, 0, false, 0)
-		local goal = {Transparency = 0, Position = originalPos}
-		local tween = TweenService:Create(part, tweenInfo, goal)
-		tween:Play()
+		part.Parent = workspace.TempStorage
+		local top = part:FindFirstChild("Grass") or part:FindFirstChild("WaterBlock")
 
-		local connection
-		connection = tween.Completed:Connect(function()
-			grass.Transparency = 0
-			grass.CanCollide = true
-			updateClientData:FireClient(player, userId, "OwnedChunks", playerData["OwnedChunks"][userId])
-			connection:Disconnect()
-			connection = nil
-		end)
+		local tweenParts = {top, part}
+		local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0, false, 0)
+
+		for i,v in ipairs(tweenParts) do
+			local originalPosition = v.Position
+			v.Position = originalPosition + Vector3.new(0, -20, 0)
+			v.Transparency = 1
+			local goal = {Transparency = 0, Position = originalPosition}
+			local tween = TweenService:Create(v, tweenInfo, goal)
+			tween:Play()
+			
+			if i == 2 then
+				local connection
+				connection = tween.Completed:Connect(function()
+					updateClientData:FireClient(player, "OwnedChunks", playerData["OwnedChunks"][userId])
+					v.Parent = plotFolder.MainParts
+					connection:Disconnect()
+					connection = nil
+				end)
+			end
+		end
 	end
 end
 
 
 
-function module.makeHeightNoise(x, z, scale, seed, plotFolder, part)
-	print(x,z,seed,increment,scale)
+function module.makeHeightNoise(coord1, coord2, scale, seed, plotNumber, part, userId)
+	local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
+	local plotFolder = plot["Plot"..plotNumber]
 	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
 	local normalized = noiseLocation + 1           
 	local y = normalized * 100
-
+	
 	part:SetAttribute("yValue", y)
 
-
-
 	local yMainPartLocation = y/2
-
-	part.Size = Vector3.new(increment + RF.getRandomFloat(0, increment), y, increment + RF.getRandomFloat(0, increment))
+	
+	local xSize, zSize = module.setChunkSize(coord1, coord2, userId)
+	
+	part.Size = Vector3.new(xSize, y, zSize)
 	part.Anchored = true
 	part.Position = Vector3.new(x, yMainPartLocation, z)
 	part.Parent = plotFolder.MainParts
@@ -426,11 +443,13 @@ end
 
 
 
-function module.makeBiomeNoise(x, z, scale, biomeName, seed, part)
+function module.makeBiomeNoise(coord1, coord2, scale, biomeName, seed, part, plotNumber)
 	if CollectionService:HasTag(part, "Water")  then
 		return
 	end
 	
+	local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
+		
 	local chanceData = moduleData.BiomeChanceData[biomeName]
 	scale *= chanceData[2]
 	local noiseLocation = math.noise((x + seed) / (increment) * scale, (z + seed) / (increment) * scale)
@@ -508,7 +527,49 @@ function module.deleteMap(plotFolder)
 	plotFolder.NumberOfObjects.Value = 0
 end
 
+function module.buyChunk(coordinateString, userId, player, receiptInfo)
+	if coordinateString then
+		local splitTable = string.split(coordinateString, ",")
+		local coord1 = tonumber(splitTable[1])
+		local coord2 = tonumber(splitTable[2])
+		local plotNumber = tonumber(splitTable[3])
 
+		local buyChunkNumber = math.max(coord1, coord2)
+
+		local price
+		if buyChunkNumber > 21 then
+			price  = 250000
+		else
+			price = buyPlotProducts[buyChunkNumber][1]
+		end
+
+
+		--if price == receiptInfo.RobuxSpent then
+		currentChunkRemote:FireClient(player, coordinateString)
+		local biomes = playerData["BiomeSeeds"][userId]
+		local heightSeed = playerData["HeightSeed"][userId][1]
+
+		module.AddChunk(coord1, coord2, plotNumber, heightSeed, importantValues.HeightScale.Value, true, player)
+		--end
+	end
+end
+
+function module.setChunkSize(coord1, coord2, userId)
+	local xSize
+	local zSize
+	local sizeTable
+	local savedSizeTable = chunkSizes[userId][coord1..","..coord2]
+	if savedSizeTable then
+		sizeTable = savedSizeTable
+		xSize = savedSizeTable[1]
+		zSize = savedSizeTable[2]
+	else
+		xSize = increment + RF.getRandomFloat(0, increment)
+		zSize = increment + RF.getRandomFloat(0, increment)
+		chunkSizes[userId][coord1..","..coord2] = {xSize, zSize}
+	end
+	return	xSize, zSize
+end
 
 
 return module
