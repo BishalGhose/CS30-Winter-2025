@@ -19,10 +19,13 @@ local updateClientData = remoteEvents.UpdateClientData
 local currentChunkRemote = remoteEvents.CurrentChunkRemote
 local teleportHome = remoteEvents.TeleportHome
 local outerChunkPrice = remoteEvents.OuterChunkPrice
+local coinsBuyChunk = remoteEvents.CoinsBuyChunk
 
+local chunkSizes = playerData.ChunkSizes
 local buyPlotProducts = moduleData.BuyPlotProducts
 local plots = workspace.Plots
 local importantValues = ReplicatedStorage.ImportantValues
+
 
 local tableOfOccupiedPlots = {}
 
@@ -67,10 +70,13 @@ Players.PlayerAdded:Connect(function(player)
 	leaderstats.Parent = player
 
 	local coins = Instance.new("NumberValue")
-	coins.Name = "Money"
-	coins.Value = 0
+	coins.Name = "Coins"
+	coins.Value = 32423420
 	coins.Parent = leaderstats
 	
+	coins.Changed:Connect(function()
+		playerData["Coins"][userId] = coins.Value
+	end)
 
 	local playerNumber = Instance.new("NumberValue")
 	playerNumber.Parent = player
@@ -86,9 +92,9 @@ Players.PlayerAdded:Connect(function(player)
 		end
 	end
 	
-	local playerPlotNumber = playerNumber.Value
+	local plotNumber = playerNumber.Value
 
-	local playerPlot = workspace.Plots["Plot"..playerPlotNumber]
+	local playerPlot = workspace.Plots["Plot"..plotNumber]
 	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = player.Name.."'s Plot"
 
 	player.CharacterAdded:Connect(function(character)
@@ -105,10 +111,12 @@ Players.PlayerAdded:Connect(function(player)
 			table.insert(ownedChunks, {i,x})
 		end
 	end
-	print(ownedChunks)
-	updateClientData:FireClient(player, userId, "OwnedChunks", ownedChunks)
+
+
+
 	
-	SF.makeMap(playerPlotNumber, ownedChunks, player)
+	SF.makeMap(plotNumber, ownedChunks, player)
+	
 end)
 
 
@@ -144,10 +152,38 @@ currentChunkRemote.OnServerEvent:Connect(function(player, buyChunk)
 	playerData["CurrentBuyChunk"][player.UserId]= buyChunk
 end)
 
-outerChunkPrice.OnServerEvent:Connect(function(coords, buyplotnumber)
-	local basePrice = RF.priceCacher(buyplotnumber)
-	local newPrice = math.round(basePrice * RF.getRandomFloat(0.5, 1.5))
+coinsBuyChunk.OnServerEvent:Connect(function(player, coordinateString)
+	local splitCoords = string.split(coordinateString, ",")
+	local coordsOnly = splitCoords[1]..","..splitCoords[2]
+	local chunkPrice = playerData["ChunkCoinPrices"][player.UserId][coordsOnly]
+	if player.leaderstats.Coins.Value >= chunkPrice then
+		player.leaderstats.Coins.Value -= chunkPrice
+	end
+	SF.buyChunk(coordinateString, player.UserId, player)
 end)
+
+
+
+
+outerChunkPrice.OnServerInvoke = function(player, coordsTable)
+	local priceTable = {}
+	for i,v in ipairs(coordsTable) do
+		local price
+		local stringCoord = v[1]..","..v[2]
+		local buyPlotNumber = math.max(v[1], v[2])
+		
+		local checkPrice = playerData["ChunkCoinPrices"][player.UserId][stringCoord]
+		if checkPrice then
+			price = checkPrice
+		else
+			price = math.round(RF.priceCacher(buyPlotNumber) * RF.getRandomFloat(0.5, 1.5))
+			playerData["ChunkCoinPrices"][player.UserId][stringCoord] = price
+		end
+		
+		table.insert(priceTable, price)
+	end
+	return priceTable
+end
 
 
 
@@ -166,35 +202,11 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 	for i,v in buyPlotProducts do
 		if productId == nil then
 			warn("nil")
+				--and receiptInfo.RobuxSpent == v[2]
 		elseif productId == v[1] then
 			local coordinateString = playerData["CurrentBuyChunk"][receiptInfo.PlayerId]
-
-			if coordinateString then
-				local splitTable = string.split(coordinateString, ",")
-				local coord1 = tonumber(splitTable[1])
-				local coord2 = tonumber(splitTable[2])
-				local plotNumber = tonumber(splitTable[3])
-
-				local buyPlotNumber = math.max(coord1, coord2)
-				
-				local price
-				if buyPlotNumber > 21 then
-					price  = 250000
-				else
-					price = buyPlotProducts[buyPlotNumber][1]
-				end
-					
-
-				--if price == receiptInfo.RobuxSpent then
-					currentChunkRemote:FireClient(player, coordinateString)
-					local biomes = playerData["BiomeSeeds"][userId]
-					local heightSeed = playerData["HeightSeed"][userId][1]
-					
-					
-					table.insert(playerData["OwnedChunks"][userId], {coord1, coord2})
-					SF.AddChunk(coord1, coord2, plotNumber, heightSeed, importantValues.HeightScale.Value, true, player)
-				--end
-			end
+			
+			SF.buyChunk(coordinateString, userId, player, receiptInfo)
 			return Enum.ProductPurchaseDecision.PurchaseGranted
 		end
 	end
@@ -203,6 +215,9 @@ MarketplaceService.ProcessReceipt = function(receiptInfo)
 
 	return Enum.ProductPurchaseDecision.NotProcessedYet
 end
+
+
+
 
 
 
@@ -269,5 +284,5 @@ while true do
 			
 		end
 	end
-	task.wait()
+	task.wait()  
 end

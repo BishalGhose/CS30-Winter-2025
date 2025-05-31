@@ -39,75 +39,58 @@ local module = {}
 
 
 function module.displayBuyChunks()
-	for i,v in localPlayer:WaitForChild("PlayerGui"):WaitForChild("BillboardGuiStorage"):GetChildren() do
-		v:Destroy()
-	end
 
 	local coordinatesTable = playerData["OwnedChunks"][userId]
 	local buyCoordinates = RF.getBuyCoordinates(coordinatesTable)
-
-
-	for i,v in buyUIFolder:GetChildren() do
-		v:Destroy()
-	end
-
-	module.putIn3dSpace(buyCoordinates)
-end
-
-
-
-
-function module.putIn3dSpace(buyCoordinates)
 	local priceTable = outerChunkPrice:InvokeServer(buyCoordinates)
 
-	for i,v in ipairs(buyCoordinates) do
-		local increment = importantValues:WaitForChild("Increment").Value
-		local x, z = RF.coordinateScale(increment, plotNumber, v)
-
-
-
-		local ySize, yPosition = module.checkNearbyY(v, plotNumber)
-
-
-
-		local buyPlotNumber = math.max(v[1], v[2])
-		if buyPlotNumber > 21 then
-			buyPlotNumber = 21
+	for i,coord in ipairs(buyCoordinates) do
+		if buyUIFolder:FindFirstChild(coord[1]..","..coord[2]..","..plotNumber) == nil then
+			module.putIn3dSpace(coord, priceTable)
 		end
-
-
-		local outlineBlockClone = outlineBlock:Clone()
-		outlineBlockClone.Parent = buyUIFolder
-		local coordSize = chunkSizes[userId][v[1]..","..v[2]]
-		outlineBlockClone.Size = Vector3.new(coordSize[1], ySize, coordSize[2])
-		outlineBlockClone.Position = Vector3.new(x, yPosition, z)
-		outlineBlockClone.Name = v[1]..","..v[2]..","..plotNumber
-
-
-		local buyPlotUIClone = buyPlotUI:Clone()
-		buyPlotUIClone.Name = v[1]..","..v[2]..","..plotNumber
-		buyPlotUIClone.Parent = playerGui:WaitForChild("BillboardGuiStorage")
-		buyPlotUIClone.Adornee = outlineBlockClone
-		buyPlotUIClone.Enabled = true
-		buyPlotUIClone.StudsOffsetWorldSpace = Vector3.new(0, 3*outlineBlockClone.Size.Y/5, 0)
-
-		local buyPlotNumber = math.max(v[1], v[2])
-
-
-		
-		buyPlotUIClone:WaitForChild("PriceFrame"):WaitForChild("PriceText").Text = "$ "..RF.addCommas(priceTable[i])
-		
-		if buyPlotNumber > 21 then
-			buyPlotNumber = 21
-		end
-		buyPlotUIClone:SetAttribute("BuyPlotNumber", buyPlotNumber)
-		local price = moduleData.BuyPlotProducts[buyPlotNumber][2]
-		buyPlotUIClone:WaitForChild("RobuxBuyFrame"):WaitForChild("Frame"):WaitForChild('TextButton').Text = price
 	end
 end
 
 
 
+
+function module.putIn3dSpace(coord, priceTable)
+	local increment = importantValues:WaitForChild("Increment").Value
+	local x, z = RF.coordinateScale(increment, plotNumber, coord)
+	local coordName = coord[1]..","..coord[2]..","..plotNumber
+
+	local buyPlotNumber = math.max(coord[1], coord[2])
+	if buyPlotNumber > 21 then
+		buyPlotNumber = 21
+	end
+
+
+	local outlineBlockClone = outlineBlock:Clone()
+	outlineBlockClone.Parent = buyUIFolder
+	print(chunkSizes)
+	local coordSize = chunkSizes[userId][coord[1]..","..coord[2]]
+	outlineBlockClone.Size = Vector3.new(coordSize[1], coordSize[2], coordSize[3])
+	outlineBlockClone.Position = Vector3.new(x, coordSize[2]/2, z)
+	outlineBlockClone.Name = coordName
+
+
+	local buyPlotUIClone = buyPlotUI:Clone()
+	buyPlotUIClone.Name = coordName
+	buyPlotUIClone.Parent = playerGui:WaitForChild("BillboardGuiStorage")
+	buyPlotUIClone.Adornee = outlineBlockClone
+	buyPlotUIClone.Enabled = true
+	buyPlotUIClone.StudsOffsetWorldSpace = Vector3.new(0, 3*outlineBlockClone.Size.Y/5, 0)
+
+
+	buyPlotUIClone:WaitForChild("PriceFrame"):WaitForChild("PriceText").Text = "$ "..RF.addCommas(priceTable[i])
+
+	buyPlotUIClone:SetAttribute("BuyPlotNumber", buyPlotNumber)
+	local price = moduleData.BuyPlotProducts[buyPlotNumber][2]
+	buyPlotUIClone:WaitForChild("RobuxBuyFrame"):WaitForChild("Frame"):WaitForChild('TextButton').Text = price
+end
+
+
+--[[
 function module.checkNearbyY(location, plotNumber)
 	local ySize = 0
 	local yPosition = 0
@@ -133,8 +116,7 @@ function module.checkNearbyY(location, plotNumber)
 
 	return ySize/amountNearby, yPosition/amountNearby
 end
-
-
+]]--
 
 
 

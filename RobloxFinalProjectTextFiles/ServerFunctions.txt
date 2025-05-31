@@ -296,11 +296,11 @@ end
 
 
 function module.makeMap(plotNumber, tableOfCoords, player)
+	local userId = player.UserId
 	local heightScale = RF.getRandomFloat(.022, .026)
 	importantValues.HeightScale.Value = heightScale
 	local plotFolder = plot["Plot"..plotNumber]
 	
-
 
 	for biomeName, chanceData in moduleData.BiomeChanceData do
 		local biomeSeed
@@ -326,13 +326,21 @@ function module.makeMap(plotNumber, tableOfCoords, player)
 		playerData["HeightSeed"][player.UserId][1] = heightSeed
 	end
 
-
 	for i,v in tableOfCoords do
 		module.AddChunk(v[1], v[2], plotNumber, heightSeed, heightScale, false, player)
 	end
 
 
+	for i,v in RF.getBuyCoordinates(playerData["OwnedChunks"][userId]) do
+		if chunkSizes[userId][v[1]..","..v[2]] == nil then
+			module.setChunkSize(v[1], v[2], plotNumber, heightSeed, heightScale, userId)
+		end
+	end
+	updateClientData:FireClient(player, "ChunkSizes", chunkSizes[userId])
 
+
+	local ownedChunks = playerData["OwnedChunks"][player.UserId]
+	updateClientData:FireClient(player, "OwnedChunks", ownedChunks)
 end
 
 
@@ -367,16 +375,18 @@ function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, an
 	module.checkEmptyChunk(part)
 
 	if animation then
+		part.Parent = workspace.TempStorage
 		table.insert(playerData["OwnedChunks"][userId], {coord1, coord2})
 		for i,v in RF.getBuyCoordinates(playerData["OwnedChunks"][userId]) do
 			if chunkSizes[userId][v[1]..","..v[2]] == nil then
-				module.setChunkSize(v[1], v[2], userId)
+				module.setChunkSize(v[1], v[2], plotNumber, heightSeed, heightScale, userId)
 			end
 		end
-		updateClientData:FireClient(player, "ChunksSizes", chunkSizes[userId])
+		updateClientData:FireClient(player, "OwnedChunks", playerData["OwnedChunks"][userId])
+		updateClientData:FireClient(player, "ChunkSizes", chunkSizes[userId])
 		destroySkeleton:FireClient(player, fullCoord)
 		
-		part.Parent = workspace.TempStorage
+
 		local top = part:FindFirstChild("Grass") or part:FindFirstChild("WaterBlock")
 
 		local tweenParts = {top, part}
@@ -388,13 +398,14 @@ function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, an
 			v.Transparency = 1
 			local goal = {Transparency = 0, Position = originalPosition}
 			local tween = TweenService:Create(v, tweenInfo, goal)
+
 			tween:Play()
 			
 			if i == 2 then
+
 				local connection
 				connection = tween.Completed:Connect(function()
-					updateClientData:FireClient(player, "OwnedChunks", playerData["OwnedChunks"][userId])
-					v.Parent = plotFolder.MainParts
+					part.Parent = plotFolder.MainParts
 					connection:Disconnect()
 					connection = nil
 				end)
@@ -408,22 +419,21 @@ end
 function module.makeHeightNoise(coord1, coord2, scale, seed, plotNumber, part, userId)
 	local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
 	local plotFolder = plot["Plot"..plotNumber]
-	local noiseLocation = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
-	local normalized = noiseLocation + 1           
+	local noiseValue = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
+	local normalized = noiseValue + 1           
 	local y = normalized * 100
-	
+	local yMainPartLocation = y/2
 	part:SetAttribute("yValue", y)
 
-	local yMainPartLocation = y/2
-	
-	local xSize, zSize = module.setChunkSize(coord1, coord2, userId)
+	local xSize, ySize, zSize, noiseValue = module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
+
 	
 	part.Size = Vector3.new(xSize, y, zSize)
 	part.Anchored = true
 	part.Position = Vector3.new(x, yMainPartLocation, z)
 	part.Parent = plotFolder.MainParts
 
-	if noiseLocation < -0.4 then
+	if noiseValue < -0.4 then
 		CollectionService:AddTag(part, "Water")
 
 		part.Material = Enum.Material.Sand
@@ -554,21 +564,28 @@ function module.buyChunk(coordinateString, userId, player, receiptInfo)
 	end
 end
 
-function module.setChunkSize(coord1, coord2, userId)
-	local xSize
-	local zSize
-	local sizeTable
+function module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
+	local xSize, ySize, zSize, noiseValue
+	print(chunkSizes)
+	print(userId)
 	local savedSizeTable = chunkSizes[userId][coord1..","..coord2]
 	if savedSizeTable then
-		sizeTable = savedSizeTable
 		xSize = savedSizeTable[1]
-		zSize = savedSizeTable[2]
+		ySize = savedSizeTable[2]
+		zSize = savedSizeTable[3]
+		noiseValue = savedSizeTable[4]
+
 	else
+		local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
+		noiseValue = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)         
+		ySize = (noiseValue + 1 ) * 100
+
 		xSize = increment + RF.getRandomFloat(0, increment)
 		zSize = increment + RF.getRandomFloat(0, increment)
-		chunkSizes[userId][coord1..","..coord2] = {xSize, zSize}
+		chunkSizes[userId][coord1..","..coord2] = {xSize, ySize, zSize, noiseValue}
+
 	end
-	return	xSize, zSize
+	return	xSize, ySize, zSize, noiseValue
 end
 
 
