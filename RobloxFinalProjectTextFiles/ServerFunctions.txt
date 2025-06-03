@@ -18,6 +18,7 @@ local destroySkeleton = remoteEvents.DestroySkeleton
 
 local chunkSizes = playerData["ChunkSizes"]
 local buyPlotProducts = moduleData.BuyPlotProducts
+local particleFolder = ReplicatedStorage.Particles
 local biomesFolder = ReplicatedStorage.Biomes
 local importantValues = ReplicatedStorage.ImportantValues
 local plot = workspace.Plots
@@ -175,7 +176,7 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 end
 
 function module.runGoldenChance(model, plotFolder)
-	if math.random(1,128) == 1 then
+	if math.random(1,64) == 1 then
 		CollectionService:AddTag(model, "Golden")
 		model.Parent = plotFolder.GoldenParts
 		for i,v in model:GetDescendants() do
@@ -183,7 +184,7 @@ function module.runGoldenChance(model, plotFolder)
 				v.Color = Color3.fromRGB(255, 215, 0)
 				module.colorOffsetPart(v, -25, 25)
 			end
-			local goldenParticle = ReplicatedStorage.Particles.GoldenParticles:Clone()
+			local goldenParticle = particleFolder.GoldenParticles:Clone()
 			goldenParticle.Parent = v
 			if v == model.PrimaryPart then
 				goldenParticle.Rate = 18
@@ -194,7 +195,7 @@ end
 
 
 function module.runRainbowChance(model, plotFolder)
-	if math.random(1,128) == 1 then
+	if math.random(1,512) == 1 then
 		if CollectionService:HasTag(model, "Golden") then
 			CollectionService:RemoveTag(model, "Golden")
 		end
@@ -203,7 +204,7 @@ function module.runRainbowChance(model, plotFolder)
 
 		for i,v in model:GetDescendants() do
 			
-			local rainbowParticle = ReplicatedStorage.Particles.RainbowParticles:Clone()
+			local rainbowParticle = particleFolder.RainbowParticles:Clone()
 			rainbowParticle.Parent = v
 			if v == model.PrimaryPart then
 				rainbowParticle.Rate = 18
@@ -212,6 +213,48 @@ function module.runRainbowChance(model, plotFolder)
 	end
 end
 
+
+function module.makeBloodRed(model, plotFolder)
+	CollectionService:AddTag(model, "Blood_Red")
+	model.Parent = plotFolder.BloodRedParts
+	
+	for i,v in model:GetDescendants() do
+		local bloodRedParticle = particleFolder.BloodRedParticles:Clone()
+
+		if v:IsA("Part") then
+			v.Color = Color3.fromRGB(135, 0, 0)
+			module.colorOffsetPart(v, -25, 25)
+		end
+		bloodRedParticle.Parent = v
+		
+		if v == model.PrimaryPart then
+			bloodRedParticle.Rate *= 1.5
+		end
+	end
+end
+
+function module.makeSilverSurge(model, plotFolder)
+	CollectionService:AddTag(model, "Holy")
+	model.Parent = plotFolder.HolyParts
+
+	for i,v in model:GetDescendants() do
+	--	local holyParticle = particleFolder.holyParticles:Clone()
+
+		if v:IsA("Part") then
+
+			v.Color = Color3.fromRGB(110, 110, 110)
+
+
+			v.Material = Enum.Material.Neon	
+			module.colorOffsetPart(v, -25, 25)
+		end
+		
+		--holyParticle.Parent = v
+		--if v == model.PrimaryPart then
+		--	holyParticle.Rate *= 1.5
+		--end
+	end
+end
 
 
 
@@ -271,14 +314,6 @@ function module.makeSavanahLeaf(model, biome, position)
 	subLeaf.Position = position + Vector3.new(0, mainLeaf.Size.Y/2, 0)
 	module.colorOffsetPart(subLeaf, -25, 25)
 end
-
-
-
-
-
-
-
-
 
 
 
@@ -524,7 +559,7 @@ end
 
 
 function module.deleteMap(plotFolder)
-	local tableOfPartsFolders = {"MainParts", "GoldenParts", "RainbowParts", "BuyUIFolder", "SeedDataFolder"}
+	local tableOfPartsFolders = {"MainParts", "GoldenParts", "RainbowParts", "BloodRedParts", "HolyParts", "BuyUIFolder", "SeedDataFolder"}
 
 	for i, v in tableOfPartsFolders do
 		for x, y in plotFolder[v]:GetChildren() do
@@ -566,8 +601,6 @@ end
 
 function module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
 	local xSize, ySize, zSize, noiseValue
-	print(chunkSizes)
-	print(userId)
 	local savedSizeTable = chunkSizes[userId][coord1..","..coord2]
 	if savedSizeTable then
 		xSize = savedSizeTable[1]
@@ -583,7 +616,6 @@ function module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
 		xSize = increment + RF.getRandomFloat(0, increment)
 		zSize = increment + RF.getRandomFloat(0, increment)
 		chunkSizes[userId][coord1..","..coord2] = {xSize, ySize, zSize, noiseValue}
-
 	end
 	return	xSize, ySize, zSize, noiseValue
 end

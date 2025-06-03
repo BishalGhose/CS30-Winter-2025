@@ -43,8 +43,8 @@ module.BiomePriceMultiplier =
 	["FairyGrass"]    		= 1.7,
 	["CrimsonGrass"]  		= 1.8,
 	["HolyGrass"]     		= 1.9,
-	["TwilightGrass"] 		= 2,
-	["DarkDimensionGrass"]  = 3
+	["TwilightGrass"] 		= 2.5,
+	["DarkDimensionGrass"]  = 4
 }
 
 
@@ -178,12 +178,12 @@ module.BuyPlotProducts =
 module.ObjectPriceAndHP =
 {
 	["Rock"] = {
-		["normal"] = 0,
-		["spikey"] = 0,
-		["flat"] = 0
+		["normal"] = {10, 30},
+		["spikey"] = {15, 50},
+		["flat"] = {25, 100}
 	},
 	
-	["Cactus"] = 0,
+	["Cactus"] = {19, 35},
 	
 	["Bamboo"] = 0,
 	
@@ -226,6 +226,24 @@ module.ObjectPriceAndHP =
 		["Diamond"] = 0
 	}
 }
+
+
+module.Mutations = {
+	"Golden",
+	
+
+
+}
+
+
+
+
+
+
+
+
+
+
 
 module.PlayerDataTables = {}
 

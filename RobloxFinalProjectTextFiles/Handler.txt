@@ -251,7 +251,6 @@ end
 while true do
 	for plotNumber,v in ipairs(tableOfOccupiedPlots) do
 		if v == "Closed" then
-
 			local plotFolder = plots["Plot"..plotNumber]
 			local tableOfChunks = plotFolder.MainParts:GetChildren()
 			local tableOfDensities = {}
@@ -284,5 +283,5 @@ while true do
 			
 		end
 	end
-	task.wait()  
+	task.wait(1)  
 end

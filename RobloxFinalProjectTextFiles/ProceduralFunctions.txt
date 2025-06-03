@@ -12,11 +12,9 @@ local RF = require(ReplicatedStorage.ReplicatedFunctions)
 
 local module = {}
 
-function module.makeMiniRock(chunkPart, biome, plotFolder, shape, heightDifference, scaleFactor)
+function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, scaleFactor)
 	local model = SF.makePartModel(chunkPart, shape.."_Rock")
-	
 	local grass = chunkPart.Grass      
-
 
 	if shape == "normal" then ---------------------------------------------------------------------
 		
@@ -68,15 +66,9 @@ function module.makeMiniRock(chunkPart, biome, plotFolder, shape, heightDifferen
 		SF.finalizePosition(model, grass, 0.02, heightDifference)
 	end
 	
-	SF.runGoldenChance(model, plotFolder )
+	SF.runGoldenChance(model, plotFolder)
 	SF.runRainbowChance(model, plotFolder)
 end
-
-
-
-
-
-
 
 
 
@@ -191,6 +183,7 @@ function module.makeDefaultTree(chunkPart, biome, plotFolder)
 	SF.finalizePosition(model, grass, 0.08, (trunk.Size.Y/2))
 	SF.runGoldenChance(model, plotFolder)
 	SF.runRainbowChance(model, plotFolder)
+	SF.makeHoly(model, plotFolder)
 end
 
 
@@ -302,6 +295,7 @@ function module.makeBasicBush(chunkPart, biome, plotFolder)
 	SF.finalizePosition(model, grass, 0.01, (stud.Size.Y/2))
 	SF.runGoldenChance(model, plotFolder)
 	SF.runRainbowChance(model, plotFolder)
+	SF.makeBloodRed(model, plotFolder)
 end
 
 
@@ -388,7 +382,7 @@ end
 --		)
 --	end
 
---	model.PrimaryPart = model:getCHildren()[1]
+--	model.PrimaryPart = model:getChildren()[1]
 --	SF.finalizePosition(model, grass, 0.04, (model.PrimaryPart.Size.Y/2) + heightDifference)
 --	SF.runGoldenChance(model, plotFolder)
 --	SF.runRainbowChance(model, plotFolder)

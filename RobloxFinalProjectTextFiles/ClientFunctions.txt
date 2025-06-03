@@ -3,7 +3,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local StarterGui = game:GetService("StarterGui")
 
 
 local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
@@ -12,29 +11,30 @@ local playerData = require(ReplicatedStorage.PlayerData)
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local outerChunkPrice = remoteEvents:WaitForChild("OuterChunkPrice")
+local coinsBuyChunk = remoteEvents:WaitForChild("CoinsBuyChunk")
 
-local chunkSizes = playerData["ChunkSizes"]
+
 local localPlayer = Players.LocalPlayer
+local userId = localPlayer.UserId
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 local mouse = localPlayer:GetMouse()
 local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
+
 local plots = workspace:WaitForChild("Plots")
 local currentPlot = plots:WaitForChild("Plot"..plotNumber)
 local mainParts = currentPlot:WaitForChild("MainParts")
 local buyUIFolder = currentPlot:WaitForChild("BuyUIFolder")
 local outlineBlock = ReplicatedStorage:WaitForChild("OutlineBlock")
-local buyPlotUI = StarterGui:WaitForChild("BuyPlotUI")
-local userId = localPlayer.UserId
 local importantValues = ReplicatedStorage:WaitForChild("ImportantValues")
 local priceCache = moduleData["PriceCache"]
+local chunkSizes = playerData["ChunkSizes"]
 
-
+local buyChunkBillboard = playerGui:WaitForChild("BuyChunkBillboard")
+local screenGui = playerGui:WaitForChild("ScreenGui")
+local buyChunkFrame = screenGui:WaitForChild("BuyChunkFrame")
+local moneyText = buyChunkFrame:WaitForChild("MoneyText")
 
 local module = {}
-
-
-
-
 
 
 
@@ -46,7 +46,7 @@ function module.displayBuyChunks()
 
 	for i,coord in ipairs(buyCoordinates) do
 		if buyUIFolder:FindFirstChild(coord[1]..","..coord[2]..","..plotNumber) == nil then
-			module.putIn3dSpace(coord, priceTable)
+			module.putIn3dSpace(coord, priceTable, i)
 		end
 	end
 end
@@ -54,7 +54,7 @@ end
 
 
 
-function module.putIn3dSpace(coord, priceTable)
+function module.putIn3dSpace(coord, priceTable, i)
 	local increment = importantValues:WaitForChild("Increment").Value
 	local x, z = RF.coordinateScale(increment, plotNumber, coord)
 	local coordName = coord[1]..","..coord[2]..","..plotNumber
@@ -74,20 +74,37 @@ function module.putIn3dSpace(coord, priceTable)
 	outlineBlockClone.Name = coordName
 
 
-	local buyPlotUIClone = buyPlotUI:Clone()
-	buyPlotUIClone.Name = coordName
-	buyPlotUIClone.Parent = playerGui:WaitForChild("BillboardGuiStorage")
-	buyPlotUIClone.Adornee = outlineBlockClone
-	buyPlotUIClone.Enabled = true
-	buyPlotUIClone.StudsOffsetWorldSpace = Vector3.new(0, 3*outlineBlockClone.Size.Y/5, 0)
+	local buyChunkBillboardClone = buyChunkBillboard:Clone()
+	buyChunkBillboardClone.Name = coordName
+	buyChunkBillboardClone.Parent = playerGui:WaitForChild("BillboardGuiStorage")
+	buyChunkBillboardClone.Adornee = outlineBlockClone
+	buyChunkBillboardClone.Enabled = true
+	buyChunkBillboardClone.StudsOffsetWorldSpace = Vector3.new(0, 3*outlineBlockClone.Size.Y/5, 0)
 
 
-	buyPlotUIClone:WaitForChild("PriceFrame"):WaitForChild("PriceText").Text = "$ "..RF.addCommas(priceTable[i])
+	buyChunkBillboardClone:WaitForChild("PriceFrame"):WaitForChild("PriceText").Text = "$ "..RF.addCommas(priceTable[i])
 
-	buyPlotUIClone:SetAttribute("BuyPlotNumber", buyPlotNumber)
+	buyChunkBillboardClone:SetAttribute("BuyPlotNumber", buyPlotNumber)
 	local price = moduleData.BuyPlotProducts[buyPlotNumber][2]
-	buyPlotUIClone:WaitForChild("RobuxBuyFrame"):WaitForChild("Frame"):WaitForChild('TextButton').Text = price
+	buyChunkBillboardClone:WaitForChild("RobuxBuyFrame"):WaitForChild("Frame"):WaitForChild('TextButton').Text = price
 end
+
+
+
+function module.buyChunkScreenUI(coords, price)
+	moneyText.Text = price
+	module.tweenUIPos(buyChunkFrame, {0.5,0}, {0.5,0})
+	buyChunkFrame:WaitForChild("Coordinate").Value = coords
+end
+
+function module.tweenUIPos(UI, pos1, pos2)
+	local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0, false, 0)
+	local goal = {Position = UDim2.new(pos1[1], pos1[2], pos2[1], pos2[2])}
+	local tween = TweenService:Create(UI, tweenInfo, goal)
+	tween:Play()
+end
+
+
 
 
 --[[

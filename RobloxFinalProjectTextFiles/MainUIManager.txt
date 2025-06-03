@@ -1,22 +1,82 @@
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterPlayer = game:GetService("StarterPlayer")
+
 local localPlayer = Players.LocalPlayer
+local leaderstats = localPlayer:FindFirstChild("leaderstats")
+local coins = leaderstats:FindFirstChild("Coins")
 local playerGui = localPlayer:WaitForChild("PlayerGui")
-local screenGui = playerGui.ScreenGui
+local screenGui = playerGui:WaitForChild("ScreenGui")
+local starterPlayerScripts = StarterPlayer:WaitForChild("StarterPlayerScripts")
+
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local teleportHome = remoteEvents:WaitForChild("TeleportHome")
+local coinsBuyChunk = remoteEvents:WaitForChild("CoinsBuyChunk")
+
+local buyChunkFrame = screenGui:WaitForChild("BuyChunkFrame")
+local homeButton = screenGui:WaitForChild("HomeButton")
+local restartButton = screenGui:WaitForChild("RestartButton")
+local sellButton = 	screenGui:WaitForChild("SellButton")
+local coinFrame = screenGui:WaitForChild("CoinFrame")
+
+local homeImageButton = homeButton:WaitForChild("ImageButton")
+local xButton = buyChunkFrame:WaitForChild("XButton")
+local buyButtonFrame = buyChunkFrame:WaitForChild("BuyButtonFrame")
+local buyButton = buyButtonFrame:WaitForChild("BuyButton")
 
 
+local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
+local CF = require(starterPlayerScripts:WaitForChild("ClientFunctions"))
 
 
-
-
-
---Make it so it displays a dark cover over UI when mouse is hovering
-local sellButton = script.Parent.ScreenGui.SellGUI.TextButton
-
-sellButton.MouseEnter:Connect(function()
-	sellButton.Parent:FindFirstChild("ShadowFrame").Visible = true
+coins.Changed:Connect(function()
+	coinFrame:WaitForChild("TextButton").Text = "$ "..RF.addCommas(coins.Value)
 end)
 
-sellButton.MouseLeave:Connect(function()
-	sellButton.Parent:FindFirstChild("ShadowFrame").Visible = false
+--Make it so it displays a dark cover over UI when mouse is hovering
+
+homeImageButton.MouseButton1Click:Connect(function()
+	teleportHome:FireServer()
+end)
+
+local tableOfButtons = {
+	sellButton:WaitForChild("TextButton"),
+	homeImageButton,
+	restartButton:WaitForChild("ImageButton")
+}
+
+for i, v in tableOfButtons do
+	v.MouseEnter:Connect(function()
+		v.Parent:WaitForChild("ShadowFrame").Visible = true
+	end)
+
+	v.MouseLeave:Connect(function()
+		v.Parent:WaitForChild("ShadowFrame").Visible = false
+	end)
+end
+
+xButton.MouseEnter:Connect(function()
+	xButton.ImageColor3 = Color3.fromRGB(195,195,195)
+end)
+
+xButton.MouseLeave:Connect(function()
+	xButton.ImageColor3 = Color3.fromRGB(255,255,255)
+end)
+
+xButton.MouseButton1Click:Connect(function()
+	CF.tweenUIPos(buyChunkFrame, {0.5, 0}, {1.5, 0})
+end)
+
+buyButton.MouseEnter:Connect(function()
+	buyButtonFrame.BackgroundTransparency = 0.5
+end)
+
+buyButton.MouseLeave:Connect(function()
+	buyButtonFrame.BackgroundTransparency = 0.65
+end)
+
+buyButton.MouseButton1Click:Connect(function()
+	coinsBuyChunk:FireServer(buyChunkFrame:WaitForChild("Coordinate").Value)
+	CF.tweenUIPos(buyChunkFrame, {0.5, 0}, {1.5, 0})
 end)
