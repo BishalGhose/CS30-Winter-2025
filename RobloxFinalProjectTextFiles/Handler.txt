@@ -5,14 +5,17 @@ local DataStoreService = game:GetService("DataStoreService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local CollectionService = game:GetService("CollectionService")
 local MarketplaceService =  game:GetService("MarketplaceService")
+local RunService = game:GetService("RunService")
 
-
-local proceduralFunctions = require(ServerStorage.ProceduralFunctions)
+local profileStore = require(ServerScriptService.Libaries.ProfileStore)
+local proceduralFunctions = require(ServerScriptService.ProceduralFunctions)
 local playerData = require(ReplicatedStorage.PlayerData)
 local moduleData = require(ReplicatedStorage.ModuleData)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
-local SF = require(ServerStorage.ServerFunctions)
-local terrainDecorationsManager = require(ServerStorage.TerrainDecorationsManager)
+local SF = require(ServerScriptService.ServerFunctions)
+local terrainDecorationsManager = require(ServerScriptService.TerrainDecorationsManager)
+local dataTemplate = require(ServerScriptService.DataTemplate)
+local dataManager = require(ServerScriptService.DataManager)
 
 local remoteEvents = ReplicatedStorage.RemoteEvents
 local updateClientData = remoteEvents.UpdateClientData
@@ -56,12 +59,64 @@ end
 
 
 
+
+local function isStudio()
+	return RunService:IsStudio() and "Test" or "Live"
+end
+local playerStore = profileStore.New(isStudio(), dataTemplate)
+
+local function initialize(player, profile)
+	
+end
+
+
 Players.PlayerAdded:Connect(function(player)
 	local userId = player.UserId
 	
 	for i,v in playerData do
 		v[userId] = {}
 	end
+
+
+
+
+	local profile = playerStore:StartSessionAsync("Player_"..userId, {
+		Cancel = function()
+			return player.Parent ~= Players
+		end,
+	})
+
+	if profile ~= nil then
+		profile:AddUserId(userId)
+
+		profile.OnSessionEnd:Connect(function()
+			dataManager.playerProfiles[userId] = nil
+			player:Kick("Data error occured, please rejoin")
+		end)
+
+
+		if player.Parent == Players then
+			dataManager.playerProfiles[userId] = profile
+
+			initialize(player, profile)
+		else
+			profile:EndSession()
+
+		end
+	else
+		player:Kick("Data error occured, please rejoin")
+		profile:Reconcile()
+	end
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -283,5 +338,5 @@ while true do
 			
 		end
 	end
-	task.wait(1)  
+	task.wait(1)
 end
