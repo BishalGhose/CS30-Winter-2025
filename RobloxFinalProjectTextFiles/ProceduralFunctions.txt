@@ -1,12 +1,13 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local RunService = game:GetService("RunService")
 local StarterPlayer = game:GetService("StarterPlayer")
 
 local biomesFolder = ReplicatedStorage.Biomes
 local moduleData = require(ReplicatedStorage.ModuleData)
-local SF = require(ServerStorage.ServerFunctions)
+local SF = require(ServerScriptService.ServerFunctions)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
 
 
@@ -16,7 +17,7 @@ function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, 
 	local model = SF.makePartModel(chunkPart, shape.."_Rock")
 	local grass = chunkPart.Grass      
 
-	if shape == "normal" then ---------------------------------------------------------------------
+	if shape == "Normal" then ---------------------------------------------------------------------
 		
 		for i = 1, math.random(2,3) do
 			SF.studMaker(
@@ -33,7 +34,7 @@ function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, 
 		model.PrimaryPart = model:GetChildren()[1]
 		SF.finalizePosition(model, grass, 0.05, heightDifference)
 
-	elseif shape == "spikey" then ---------------------------------------------------------------------
+	elseif shape == "Spikey" then ---------------------------------------------------------------------
 		for i = 1, math.random(3,4) do
 			SF.studMaker(
 				biomesFolder[biome].Stud,
@@ -49,7 +50,7 @@ function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, 
 		model.PrimaryPart = model:GetChildren()[1]
 		SF.finalizePosition(model, grass, 0.04, heightDifference)
 
-	elseif shape == "flat" then ---------------------------------------------------------------------
+	elseif shape == "Flat" then ---------------------------------------------------------------------
 		for i = 1, math.random(1,2) do
 			SF.studMaker(
 				biomesFolder[biome].Stud,
@@ -68,6 +69,7 @@ function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, 
 	
 	SF.runGoldenChance(model, plotFolder)
 	SF.runRainbowChance(model, plotFolder)
+	SF.setValueAndHP(model)
 end
 
 
@@ -183,7 +185,7 @@ function module.makeDefaultTree(chunkPart, biome, plotFolder)
 	SF.finalizePosition(model, grass, 0.08, (trunk.Size.Y/2))
 	SF.runGoldenChance(model, plotFolder)
 	SF.runRainbowChance(model, plotFolder)
-	SF.makeHoly(model, plotFolder)
+	---SF.makeHoly(model, plotFolder)
 end
 
 

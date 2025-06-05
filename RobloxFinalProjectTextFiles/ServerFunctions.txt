@@ -178,14 +178,13 @@ end
 function module.runGoldenChance(model, plotFolder)
 	if math.random(1,64) == 1 then
 		CollectionService:AddTag(model, "Golden")
-		model.Parent = plotFolder.GoldenParts
 		for i,v in model:GetDescendants() do
 			if v:IsA("Part") then
 				v.Color = Color3.fromRGB(255, 215, 0)
 				module.colorOffsetPart(v, -25, 25)
 			end
 			local goldenParticle = particleFolder.GoldenParticles:Clone()
-			goldenParticle.Parent = v
+
 			if v == model.PrimaryPart then
 				goldenParticle.Rate = 18
 			end
@@ -238,7 +237,7 @@ function module.makeSilverSurge(model, plotFolder)
 	model.Parent = plotFolder.HolyParts
 
 	for i,v in model:GetDescendants() do
-	--	local holyParticle = particleFolder.holyParticles:Clone()
+
 
 		if v:IsA("Part") then
 
@@ -248,11 +247,7 @@ function module.makeSilverSurge(model, plotFolder)
 			v.Material = Enum.Material.Neon	
 			module.colorOffsetPart(v, -25, 25)
 		end
-		
-		--holyParticle.Parent = v
-		--if v == model.PrimaryPart then
-		--	holyParticle.Rate *= 1.5
-		--end
+
 	end
 end
 
@@ -618,6 +613,28 @@ function module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
 		chunkSizes[userId][coord1..","..coord2] = {xSize, ySize, zSize, noiseValue}
 	end
 	return	xSize, ySize, zSize, noiseValue
+end
+
+function module.setValueAndHP(model)
+	local basePrice = moduleData.ObjectPrice[model.Name]
+
+	local mutationMultiplier = 1
+	for i,v in model:GetTags() do
+		if v ~= "BreakableObject" then
+			mutationMultiplier *= moduleData.mutationMultiplier[v]
+		end
+	end
+
+	local finalPrice = math.floor(basePrice * mutationMultiplier * RF.getRandomFloat(1,2))
+	local finalHP = math.floor(basePrice* model:GetAttribute("Scale") * RF.getRandomFloat(1,2))
+
+	local valueObject = Instance.new("NumberValue", model)
+	valueObject.Name = "Price"
+	valueObject.Value = finalPrice
+
+	local HPObject = Instance.new("NumberValue", model)
+	HPObject.Name = "HP"
+	HPObject.Value = finalHP
 end
 
 
