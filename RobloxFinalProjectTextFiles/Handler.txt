@@ -23,6 +23,7 @@ local currentChunkRemote = remoteEvents.CurrentChunkRemote
 local teleportHome = remoteEvents.TeleportHome
 local outerChunkPrice = remoteEvents.OuterChunkPrice
 local coinsBuyChunk = remoteEvents.CoinsBuyChunk
+local attackObject = remoteEvents.AttackObject
 
 local chunkSizes = playerData.ChunkSizes
 local buyPlotProducts = moduleData.BuyPlotProducts
@@ -80,33 +81,33 @@ Players.PlayerAdded:Connect(function(player)
 
 
 
-	local profile = playerStore:StartSessionAsync("Player_"..userId, {
-		Cancel = function()
-			return player.Parent ~= Players
-		end,
-	})
+	--local profile = playerStore:StartSessionAsync("Player_"..userId, {
+	--	Cancel = function()
+	--		return player.Parent ~= Players
+	--	end,
+	--})
 
-	if profile ~= nil then
-		profile:AddUserId(userId)
+	--if profile ~= nil then
+	--	profile:AddUserId(userId)
 
-		profile.OnSessionEnd:Connect(function()
-			dataManager.playerProfiles[userId] = nil
-			player:Kick("Data error occured, please rejoin")
-		end)
+	--	profile.OnSessionEnd:Connect(function()
+	--		dataManager.playerProfiles[userId] = nil
+	--		player:Kick("Data error occured, please rejoin")
+	--	end)
 
 
-		if player.Parent == Players then
-			dataManager.playerProfiles[userId] = profile
+	--	if player.Parent == Players then
+	--		dataManager.playerProfiles[userId] = profile
 
-			initialize(player, profile)
-		else
-			profile:EndSession()
+	--		initialize(player, profile)
+	--	else
+	--		profile:EndSession()
 
-		end
-	else
-		player:Kick("Data error occured, please rejoin")
-		profile:Reconcile()
-	end
+	--	end
+	--else
+	--	player:Kick("Data error occured, please rejoin")
+	--	profile:Reconcile()
+	--end
 
 
 
@@ -240,6 +241,16 @@ outerChunkPrice.OnServerInvoke = function(player, coordsTable)
 	return priceTable
 end
 
+attackObject.OnServerInvoke = function(player, model)
+	RF.shakeModel(model)
+
+	local currentHP = model.CurrentHP
+	currentHP.Value -= 1
+	
+	
+	return 
+end
+
 
 
 
@@ -307,7 +318,7 @@ while true do
 	for plotNumber,v in ipairs(tableOfOccupiedPlots) do
 		if v == "Closed" then
 			local plotFolder = plots["Plot"..plotNumber]
-			local tableOfChunks = plotFolder.MainParts:GetChildren()
+			local tableOfChunks = plotFolder.ChunkFolder:GetChildren()
 			local tableOfDensities = {}
 			local maxObjects = 0
 			
