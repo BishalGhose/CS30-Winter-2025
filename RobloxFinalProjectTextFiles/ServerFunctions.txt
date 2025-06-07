@@ -5,7 +5,7 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
-
+local StarterGui = game:GetService("StarterGui")
 
 local moduleData = require(ReplicatedStorage.ModuleData)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
@@ -59,9 +59,9 @@ function module.findListPos(number, pos, list)
 	return 1 + module.findListPos(number - list[pos], pos + 1, list)
 end
 
-function module.makePartModel(chunkPart, name)
+function module.makePartModel(plotFolder, name)
 	local model = Instance.new("Model")
-	model.Parent = chunkPart
+	model.Parent = plotFolder.MainParts
 	model.Name = name
 	CollectionService:AddTag(model, "BreakableModel")
 	return model
@@ -175,8 +175,8 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 	return upperStemTable
 end
 
-function module.runGoldenChance(model, plotFolder)
-	if math.random(1,64) == 1 then
+function module.runGoldenChance(model)
+	if math.random(1,4) == 1 then
 		CollectionService:AddTag(model, "Golden")
 		for i,v in model:GetDescendants() do
 			if v:IsA("Part") then
@@ -213,9 +213,8 @@ function module.runRainbowChance(model, plotFolder)
 end
 
 
-function module.makeBloodRed(model, plotFolder)
+function module.makeBloodRed(model)
 	CollectionService:AddTag(model, "Blood_Red")
-	model.Parent = plotFolder.BloodRedParts
 	
 	for i,v in model:GetDescendants() do
 		local bloodRedParticle = particleFolder.BloodRedParticles:Clone()
@@ -234,7 +233,6 @@ end
 
 function module.makeSilverSurge(model, plotFolder)
 	CollectionService:AddTag(model, "Holy")
-	model.Parent = plotFolder.HolyParts
 
 	for i,v in model:GetDescendants() do
 
@@ -276,10 +274,6 @@ function module.finalizePosition(model, grass, scaleFactor, yOffset, rotationMul
 
 end
 
-
-function module.shakePart(model)
-	local randomDirection = RF.getRandomFloat(-1,1)
-end
 
 
 function module.checkBreakableHierarchy(part)
@@ -435,7 +429,7 @@ function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, an
 
 				local connection
 				connection = tween.Completed:Connect(function()
-					part.Parent = plotFolder.MainParts
+					part.Parent = plotFolder.ChunkFolder
 					connection:Disconnect()
 					connection = nil
 				end)
@@ -461,7 +455,7 @@ function module.makeHeightNoise(coord1, coord2, scale, seed, plotNumber, part, u
 	part.Size = Vector3.new(xSize, y, zSize)
 	part.Anchored = true
 	part.Position = Vector3.new(x, yMainPartLocation, z)
-	part.Parent = plotFolder.MainParts
+	part.Parent = plotFolder.ChunkFolder
 
 	if noiseValue < -0.4 then
 		CollectionService:AddTag(part, "Water")
@@ -554,7 +548,7 @@ end
 
 
 function module.deleteMap(plotFolder)
-	local tableOfPartsFolders = {"MainParts", "GoldenParts", "RainbowParts", "BloodRedParts", "HolyParts", "BuyUIFolder", "SeedDataFolder"}
+	local tableOfPartsFolders = {"ChunkFolder", "RainbowParts", "BuyUIFolder", "SeedDataFolder"}
 
 	for i, v in tableOfPartsFolders do
 		for x, y in plotFolder[v]:GetChildren() do
@@ -616,11 +610,12 @@ function module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
 end
 
 function module.setValueAndHP(model)
+	print(model.Name)
 	local basePrice = moduleData.ObjectPrice[model.Name]
 
 	local mutationMultiplier = 1
 	for i,v in model:GetTags() do
-		if v ~= "BreakableObject" then
+		if v ~= "BreakableModel" then
 			mutationMultiplier *= moduleData.mutationMultiplier[v]
 		end
 	end
@@ -635,7 +630,39 @@ function module.setValueAndHP(model)
 	local HPObject = Instance.new("NumberValue", model)
 	HPObject.Name = "HP"
 	HPObject.Value = finalHP
+
+	local currentHP = Instance.new("NumberValue", model)
+	currentHP.Name = "CurrentHP"
+	currentHP.Value = finalHP
+	
 end
+
+
+function module.breakModel(model, player)
+	local primaryPart = model.PrimaryPart
+	primaryPart.Name = "Handle"
+	local tool = Instance.new("Tool", player.Backpack)
+	tool.Grip = CFrame.new(0, 0, primaryPart.Size.Z/2)
+
+	for i,v in model:GetDescendants() do
+		if v:IsA("Part") then
+			v.Parent = tool
+			v.Massless = true
+			v.Anchored = false
+			v.CanCollide = false
+			if v.Name == "Handle" then
+				continue
+			else
+				local weld = Instance.new("WeldConstraint", tool)
+				weld.Part0 = tool.Handle
+				weld.Part1 = v
+			end
+		end
+	end
+	model:Destroy()
+end
+
+
 
 
 return module

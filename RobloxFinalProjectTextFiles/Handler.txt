@@ -247,8 +247,11 @@ attackObject.OnServerInvoke = function(player, model)
 	local currentHP = model.CurrentHP
 	currentHP.Value -= 1
 	
-	
-	return 
+	if currentHP.Value <= 0 then
+		SF.breakModel(model, player)
+		return "broken"
+	end
+	return "continue"
 end
 
 

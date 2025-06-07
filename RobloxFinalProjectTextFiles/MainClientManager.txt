@@ -7,6 +7,8 @@ local StarterGui = game:GetService("StarterGui")
 local localPlayer = Players.LocalPlayer
 local userId = localPlayer.UserId
 local playerGui = localPlayer:WaitForChild("PlayerGui")
+local HPBillboard = playerGui:WaitForChild("HPBillboard")
+local HPGuiStorage = playerGui:WaitForChild("HPGuiStorage")
 local leaderstats = localPlayer:WaitForChild("leaderstats")
 local coins = leaderstats:WaitForChild("Coins")
 local mouse = localPlayer:GetMouse()
@@ -20,6 +22,7 @@ local currentChunkRemote = remoteEvents:WaitForChild("CurrentChunkRemote")
 local updateClientData = remoteEvents:WaitForChild("UpdateClientData")
 local coinsBuyChunk = remoteEvents:WaitForChild("CoinsBuyChunk")
 local destroySkeleton = remoteEvents:WaitForChild("DestroySkeleton")
+local attackObject = remoteEvents:WaitForChild("AttackObject")
 
 local playerData = require(ReplicatedStorage:WaitForChild("PlayerData"))
 local moduleData = require(ReplicatedStorage:WaitForChild("ModuleData"))
@@ -42,25 +45,62 @@ updateClientData.OnClientEvent:Connect(function(tableType, data)
 end)
 
 currentChunkRemote.OnClientEvent:Connect(function(coordinateString)
-	playerGui:WaitForChild("BillboardGuiStorage"):FindFirstChild(coordinateString):Destroy()
+	playerGui:WaitForChild("BuyChunkGuiStorage"):FindFirstChild(coordinateString):Destroy()
 end)
 
 
 mouse.Button1Down:Connect(function()
-	local model = RF.checkBreakableHierarchy(mouse.Target)
+	local target = mouse.Target
+	local model = RF.checkBreakableHierarchy(target)
 	if model then
-		local hitPos = mouse.Hit.Position
+		local state = attackObject:InvokeServer(model)
+		if state == "continue" then
+			local HP = model:WaitForChild("HP").Value
+			local currentHP = model:WaitForChild("CurrentHP").Value
 
-		local tapPart = game.Workspace:WaitForChild("TapPart")
-		local attachment = tapPart:WaitForChild("Attachment")
-		local particle = attachment:WaitForChild("ParticleEmitter")
-		tapPart.Position = hitPos
-		particle:Emit(1)
-		RF.shakeModel(model)
+			local HPBar
+			for i,v in HPGuiStorage:GetChildren() do
+				if v.Adornee == model.PrimaryPart then
+					HPBar = v
+				end
+			end
 
-		RF.breakModel(model)
+
+			if HPBar == nil then
+				HPBar = HPBillboard:Clone()
+				HPBar.Parent = HPGuiStorage
+				HPBar.Adornee = model.PrimaryPart
+				HPBar.Name = model.Name
+			end
+
+			local redBar = HPBar:WaitForChild("RedBar")
+			local greenBar = redBar:WaitForChild("GreenBar")
+			local priceText = redBar:WaitForChild("PriceText")
+
+			if currentHP/HP >= 0 then
+				priceText.Text = currentHP
+				greenBar.Size = UDim2.new(currentHP/HP, 0, 1, 0)
+			end
+
+
+			local hitPos = mouse.Hit.Position
+			local tapPart = game.Workspace:WaitForChild("TapPart")
+			local attachment = tapPart:WaitForChild("Attachment")
+			local particle = attachment:WaitForChild("ParticleEmitter")
+			tapPart.Position = hitPos
+			particle:Emit(1)
+		else
+			print("ok")
+			for i,v in HPGuiStorage:GetChildren() do
+				if v.Adornee == model:WaitForChild("Handle") then
+					v:Destroy()
+				end
+			end
+		end
+			
 	end
 end)
+
 
 
 
