@@ -1,0 +1,36 @@
+local MarketplaceService = game:GetService("MarketplaceService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local StarterPlayer = game:GetService("StarterPlayer")
+
+local moduleData = require(ReplicatedStorage:WaitForChild("ModuleData"))
+
+local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
+local CF = require(StarterPlayer:WaitForChild("StarterPlayerScripts"):WaitForChild("ClientFunctions"))
+
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+
+local localPlayer = Players.LocalPlayer
+local button = script.Parent
+local buyChunkBillboardUI = button.Parent.Parent.Parent
+local buyPlotNumber = buyChunkBillboardUI:GetAttribute("BuyPlotNumber")
+local priceFrame = buyChunkBillboardUI:WaitForChild("PriceFrame")
+local priceText = priceFrame:WaitForChild("PriceText")
+
+button.MouseButton1Click:Connect(function()
+	local price = priceText.Text
+	CF.buyChunkScreenUI(buyChunkBillboardUI.Adornee.Name, price)
+end)
+
+
+button.MouseEnter:Connect(function()
+	if buyChunkBillboardUI.Adornee then
+		buyChunkBillboardUI.Adornee:FindFirstChild("SelectionBox").Visible = true
+	end
+end)
+
+button.MouseLeave:Connect(function()
+	if buyChunkBillboardUI.Adornee then
+		buyChunkBillboardUI.Adornee:FindFirstChild("SelectionBox").Visible = false
+	end
+end)
