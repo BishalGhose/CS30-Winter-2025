@@ -16,6 +16,8 @@ local plot = workspace:WaitForChild("Plots")
 local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
 local currentPlot = plot:WaitForChild("Plot"..plotNumber)
 local buyUIFolder = currentPlot:WaitForChild("BuyUIFolder")
+local soundsFolder = ReplicatedStorage:WaitForChild("SoundEffects")
+
 
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local currentChunkRemote = remoteEvents:WaitForChild("CurrentChunkRemote")
@@ -44,6 +46,8 @@ updateClientData.OnClientEvent:Connect(function(tableType, data)
 	end
 end)
 
+
+
 currentChunkRemote.OnClientEvent:Connect(function(coordinateString)
 	playerGui:WaitForChild("BuyChunkGuiStorage"):FindFirstChild(coordinateString):Destroy()
 end)
@@ -54,6 +58,7 @@ mouse.Button1Down:Connect(function()
 	local model = RF.checkBreakableHierarchy(target)
 	if model then
 		local state = attackObject:InvokeServer(model)
+		soundsFolder:WaitForChild("Hit"):Play()
 		if state == "continue" then
 			local HP = model:WaitForChild("HP").Value
 			local currentHP = model:WaitForChild("CurrentHP").Value
@@ -84,17 +89,20 @@ mouse.Button1Down:Connect(function()
 
 
 			local hitPos = mouse.Hit.Position
-			local tapPart = game.Workspace:WaitForChild("TapPart")
-			local attachment = tapPart:WaitForChild("Attachment")
-			local particle = attachment:WaitForChild("ParticleEmitter")
+			local tapPart = ReplicatedStorage:WaitForChild("TapPart"):Clone()
+			tapPart.Parent = workspace
+
+			local particle = tapPart:WaitForChild("Attachment"):WaitForChild("ParticleEmitter")
 			tapPart.Position = hitPos
 			particle:Emit(1)
+			
+			task.delay(3, function()
+				tapPart:Destroy()
+			end)
 		else
 			print("ok")
 			for i,v in HPGuiStorage:GetChildren() do
-				if v.Adornee == model:WaitForChild("Handle") then
-					v:Destroy()
-				end
+				v:Destroy()
 			end
 		end
 			

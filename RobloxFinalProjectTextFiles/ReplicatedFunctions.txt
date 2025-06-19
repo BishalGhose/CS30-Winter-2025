@@ -29,10 +29,14 @@ end
 function module.shakeModel(model)
 	local originalCFrame = model:GetPivot()
 	local scale = model:GetAttribute("Scale")
+	local redHightlight = ReplicatedStorage:WaitForChild("RedHighlight"):Clone()
+	
 
+	redHightlight.Parent = model
 	model:ScaleTo(scale * 1.05)
 	task.wait(0.1)
 	model:ScaleTo(scale)
+	redHightlight:Destroy()
 end
 
 function module.addCommas(num)
@@ -132,6 +136,11 @@ function module.checkCoordinates(coord, coordinatesTable, buyCoordinates)
 		end
 	end
 	return true
+end
+
+
+function module.ReplaceUnderscoresWithSpaces(input)
+	return string.gsub(input, "_", " ")
 end
 
 return module

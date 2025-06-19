@@ -24,11 +24,13 @@ local teleportHome = remoteEvents.TeleportHome
 local outerChunkPrice = remoteEvents.OuterChunkPrice
 local coinsBuyChunk = remoteEvents.CoinsBuyChunk
 local attackObject = remoteEvents.AttackObject
+local sellItem = remoteEvents.SellItem
 
 local chunkSizes = playerData.ChunkSizes
 local buyPlotProducts = moduleData.BuyPlotProducts
 local plots = workspace.Plots
 local importantValues = ReplicatedStorage.ImportantValues
+
 
 
 local tableOfOccupiedPlots = {}
@@ -198,15 +200,17 @@ end)
 
 
 
-
-
 teleportHome.OnServerEvent:Connect(function(player)
 	player.Character:PivotTo(CFrame.new(Vector3.new(0, 132, 0)))
 end)
 
+
+
 currentChunkRemote.OnServerEvent:Connect(function(player, buyChunk)
 	playerData["CurrentBuyChunk"][player.UserId]= buyChunk
 end)
+
+
 
 coinsBuyChunk.OnServerEvent:Connect(function(player, coordinateString)
 	local splitCoords = string.split(coordinateString, ",")
@@ -218,6 +222,21 @@ coinsBuyChunk.OnServerEvent:Connect(function(player, coordinateString)
 	SF.buyChunk(coordinateString, player.UserId, player)
 end)
 
+
+sellItem.OnServerEvent:Connect(function(player)
+	local character = player.Character
+
+
+	for i,v in character:GetChildren() do
+		if v:IsA("Tool") then
+			local price = v.Price.Value
+			SF.changePlayersMoney(player, price)
+			sellItem:FireClient(player, price)
+			
+			v:Destroy()
+		end
+	end
+end)
 
 
 
@@ -241,11 +260,13 @@ outerChunkPrice.OnServerInvoke = function(player, coordsTable)
 	return priceTable
 end
 
+
+
 attackObject.OnServerInvoke = function(player, model)
 	RF.shakeModel(model)
 
 	local currentHP = model.CurrentHP
-	currentHP.Value -= 1
+	currentHP.Value -= 5
 	
 	if currentHP.Value <= 0 then
 		SF.breakModel(model, player)
@@ -253,6 +274,7 @@ attackObject.OnServerInvoke = function(player, model)
 	end
 	return "continue"
 end
+
 
 
 
@@ -339,18 +361,22 @@ while true do
 
 			local fillRatio = currentObjects/maxObjects
 
-			if math.random() >= fillRatio then
-				local RNG = math.random(1, maxObjects)
-				local chunkPos = SF.findListPos(RNG, 1, tableOfDensities)
-				local chunk = tableOfChunks[chunkPos]
+			--for i = 1, 200 do
+				if currentObjects <= math.floor(maxObjects * 0.6) then
+					local RNG = math.random(1, maxObjects)
+					local chunkPos = SF.findListPos(RNG, 1, tableOfDensities)
+					local chunk = tableOfChunks[chunkPos]
 
-				terrainDecorationsManager.decorateMap(chunk, plotFolder)
-				plotFolder.NumberOfObjects.Value += 1
-			end
-			
-			
-			
+					terrainDecorationsManager.decorateMap(chunk, plotFolder)
+					plotFolder.NumberOfObjects.Value += 1
+				end
+			--end		
 		end
 	end
+
+
+	SF.runWeatherManager()
 	task.wait(1)
 end
+
+--math.random() >= fillRatio

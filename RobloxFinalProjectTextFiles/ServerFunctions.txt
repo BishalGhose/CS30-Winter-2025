@@ -6,6 +6,7 @@ local TweenService = game:GetService("TweenService")
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
+local Lighting = game:GetService("Lighting")
 
 local moduleData = require(ReplicatedStorage.ModuleData)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
@@ -25,6 +26,15 @@ local plot = workspace.Plots
 local chunkBlock = ServerStorage.ChunkBlock
 local increment = tonumber(importantValues.Increment.Value)
 local biomeScale = tonumber(importantValues.BiomeScale.Value)
+local environments = Lighting.Environments
+local weatherBooleans = ServerStorage.WeatherBooleans
+local weatherRunning = ServerStorage.WeatherRunning
+local weatherChance = moduleData.weatherChance
+
+
+
+
+
 
 
 local module = {}
@@ -36,10 +46,13 @@ function module.getExponentialScale(rarity)
 	return 1 + 10 * (1 - u^rarity)
 end
 
+
+
 function module.colorOffsetPart(part, bottomOffset, topOffset)
 	local colorOffset = math.random(bottomOffset, topOffset)
 	part.Color = Color3.fromRGB(math.clamp(part.Color.R*255 + colorOffset, 0 , 255), math.clamp(part.Color.G*255 + colorOffset, 0 , 255), math.clamp(part.Color.B*255 + colorOffset, 0 , 255))
 end
+
 
 
 function module.studMaker(part, model, positionVector, sizeVector, bottomColorOffset, topColorOffset)
@@ -51,6 +64,8 @@ function module.studMaker(part, model, positionVector, sizeVector, bottomColorOf
 	return stud
 end
 
+
+
 function module.findListPos(number, pos, list)
 	if number <= list[pos] then 
 		return 1
@@ -58,6 +73,8 @@ function module.findListPos(number, pos, list)
 
 	return 1 + module.findListPos(number - list[pos], pos + 1, list)
 end
+
+
 
 function module.makePartModel(plotFolder, name)
 	local model = Instance.new("Model")
@@ -68,6 +85,7 @@ function module.makePartModel(plotFolder, name)
 end
 
 
+
 function module.makeTrunk(model, biome)
 	local trunk = biomesFolder[biome].Wood:Clone()
 	local thicknessSize = RF.getRandomFloat(2.2, 3)
@@ -76,6 +94,7 @@ function module.makeTrunk(model, biome)
 	trunk.Parent = model
 	return trunk, thicknessSize
 end
+
 
 
 function module.makeBlockSpecs(part, lowerAmount, upperAmount, model, speckType, speckVariation)
@@ -175,14 +194,137 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 	return upperStemTable
 end
 
+
+
+function module.tweenLighting(weatherEnvironment, tweenInfo)
+	for i,v in environments[weatherEnvironment]:GetChildren() do
+		local object = Lighting[v.Name]
+		for x,y in moduleData.tweenableProperties[v.Name] do
+
+			local goal = {[y] = v[y]}
+			local tween = TweenService:Create(object, tweenInfo, goal)
+			tween:Play()
+		end
+	end
+end
+
+function module.changeLighting(weatherEnvironment)
+	for i,v in environments[weatherEnvironment]:GetChildren() do
+		local object = Lighting[v.Name]
+		for x,y in moduleData.properties[v.Name] do
+			object[y] = v[y]
+		end
+	end
+end
+
+
+
+function module.makeBloodMoon(duration)
+	local environments = Lighting.Environments
+	Lighting.Sky.MoonTextureId = environments.BloodMoonEnvironment.Sky.MoonTextureId
+	
+	local deleteObjects = {}
+	for i,v in Players:GetPlayers() do
+		local character = v.Character
+		if character then
+			local fireFliesPart = ReplicatedStorage.FireFliesPart:Clone()
+			local weldConstraint = Instance.new("WeldConstraint", character)
+			local humanoidRootPart = character.HumanoidRootPart
+
+			table.insert(deleteObjects, fireFliesPart)
+			table.insert(deleteObjects, weldConstraint)
+			
+			fireFliesPart.Anchored = false
+			fireFliesPart.Position = humanoidRootPart.Position
+			fireFliesPart.Parent = character
+			
+			weldConstraint.Part0 = humanoidRootPart
+			weldConstraint.Part1 = fireFliesPart
+		end
+	end
+	
+	local tweenInfo = TweenInfo.new(6, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
+	local moonGoal = {ClockTime = 0}
+	local moonTween = TweenService:Create(Lighting, tweenInfo, moonGoal)
+	
+	moonTween:Play()
+	module.tweenLighting("BloodMoonEnvironment", tweenInfo)
+	
+	moonTween.Completed:Connect(function()
+		Lighting.Brightness = 10
+		module.changeLighting("BloodMoonEnvironment")
+
+		task.delay(duration, function()
+			local moonGoal2 = {ClockTime = 12}
+			local moonTween2 = TweenService:Create(Lighting, tweenInfo, moonGoal2)
+			moonTween2:Play()
+			module.tweenLighting("NormalEnvironment", tweenInfo)
+
+			moonTween2.Completed:Connect(function()
+				for i,v in deleteObjects do
+					v:Destroy()
+				end
+				Lighting.Brightness = 5
+				module.changeLighting("NormalEnvironment")
+				weatherRunning.Value = false
+				weatherBooleans.Blood_Moon.Value = false
+			end)
+		end)
+	end)
+end
+
+function module.makeSilverNight(duration)
+	local environments = Lighting.Environments
+
+	local tweenInfo = TweenInfo.new(6, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
+	local moonGoal = {ClockTime = 0}
+	local moonTween = TweenService:Create(Lighting, tweenInfo, moonGoal)
+
+	moonTween:Play()
+	module.tweenLighting("SilverNightEnvironment", tweenInfo)
+
+	moonTween.Completed:Connect(function()
+		Lighting.Brightness = 10
+		module.changeLighting("SilverNightEnvironment")
+
+		task.delay(duration, function()
+			local moonGoal2 = {ClockTime = 12}
+			local moonTween2 = TweenService:Create(Lighting, tweenInfo, moonGoal2)
+			moonTween2:Play()
+			module.tweenLighting("NormalEnvironment", tweenInfo)
+
+			moonTween2.Completed:Connect(function()
+				Lighting.Brightness = 5
+				module.changeLighting("NormalEnvironment")
+				weatherRunning.Value = false
+				weatherBooleans.Silver_Night.Value = false
+			end)
+		end)
+	end)
+end
+
+
+
+function module.checkMutations(model)
+	for i,v in CollectionService:GetTags(model) do
+		if moduleData.BiomePriceMultiplier[v] ~= nil then
+			return false
+		end
+	end
+	return true
+end
+
+
+
 function module.runGoldenChance(model)
-	if math.random(1,4) == 1 then
+	if math.random(1,256) == 1 and module.checkMutations(model) then
 		CollectionService:AddTag(model, "Golden")
 		for i,v in model:GetDescendants() do
 			if v:IsA("Part") then
 				v.Color = Color3.fromRGB(255, 215, 0)
 				module.colorOffsetPart(v, -25, 25)
 			end
+			
 			local goldenParticle = particleFolder.GoldenParticles:Clone()
 
 			if v == model.PrimaryPart then
@@ -193,11 +335,9 @@ function module.runGoldenChance(model)
 end
 
 
+
 function module.runRainbowChance(model, plotFolder)
-	if math.random(1,512) == 1 then
-		if CollectionService:HasTag(model, "Golden") then
-			CollectionService:RemoveTag(model, "Golden")
-		end
+	if math.random(1,1024) == 1 and module.checkMutations(model) then
 		CollectionService:AddTag(model, "Rainbow")
 		model.Parent = plotFolder.RainbowParts
 
@@ -213,39 +353,47 @@ function module.runRainbowChance(model, plotFolder)
 end
 
 
-function module.makeBloodRed(model)
-	CollectionService:AddTag(model, "Blood_Red")
-	
-	for i,v in model:GetDescendants() do
-		local bloodRedParticle = particleFolder.BloodRedParticles:Clone()
 
-		if v:IsA("Part") then
-			v.Color = Color3.fromRGB(135, 0, 0)
-			module.colorOffsetPart(v, -25, 25)
-		end
-		bloodRedParticle.Parent = v
+function module.runBloodRedChance(model)
+	print(weatherBooleans.Blood_Moon.Value)
+	if weatherBooleans.Blood_Moon.Value and math.random(1,8) == 1 then
+		CollectionService:AddTag(model, "Blood_Red")
 		
-		if v == model.PrimaryPart then
-			bloodRedParticle.Rate *= 1.5
+		print("ran")
+		for i,v in model:GetDescendants() do
+			local bloodRedParticle = particleFolder.BloodRedParticles:Clone()
+
+			if v:IsA("Part") then
+				v.Color = Color3.fromRGB(135, 0, 0)
+				module.colorOffsetPart(v, -25, 25)
+			end
+			bloodRedParticle.Parent = v
+			
+			if v == model.PrimaryPart then
+				bloodRedParticle.Rate *= 1.5
+			end
 		end
 	end
 end
 
-function module.makeSilverSurge(model, plotFolder)
-	CollectionService:AddTag(model, "Holy")
-
-	for i,v in model:GetDescendants() do
 
 
-		if v:IsA("Part") then
+function module.runSilverSurgeChance(model)
+	if weatherBooleans.Silver_Night.Value and math.random(1,12) == 1 then
+		CollectionService:AddTag(model, "Silver_Surge")
 
-			v.Color = Color3.fromRGB(110, 110, 110)
+		for i,v in model:GetDescendants() do
 
 
-			v.Material = Enum.Material.Neon	
-			module.colorOffsetPart(v, -25, 25)
+			if v:IsA("Part") then
+
+				v.Color = Color3.fromRGB(110, 110, 110)
+
+				v.Material = Enum.Material.Neon	
+				module.colorOffsetPart(v, -25, 25)
+			end
+
 		end
-
 	end
 end
 
@@ -285,6 +433,7 @@ function module.checkBreakableHierarchy(part)
 end
 
 
+
 function module.makeSavanahLeaf(model, biome, position)
 	
 	local referenceLeaf = biomesFolder[biome].TreeLeaf
@@ -309,7 +458,9 @@ end
 
 function module.changePlayersMoney(player, amount)
 	local leaderstats = player:FindFirstChild("leaderstats")
-	local money = leaderstats:FindFirstChild("Money")
+	print(leaderstats)
+	local money = leaderstats:FindFirstChild("Coins")
+	print(money)
 	money.Value += amount
 end
 
@@ -561,6 +712,8 @@ function module.deleteMap(plotFolder)
 	plotFolder.NumberOfObjects.Value = 0
 end
 
+
+
 function module.buyChunk(coordinateString, userId, player, receiptInfo)
 	if coordinateString then
 		local splitTable = string.split(coordinateString, ",")
@@ -587,6 +740,8 @@ function module.buyChunk(coordinateString, userId, player, receiptInfo)
 		--end
 	end
 end
+
+
 
 function module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
 	local xSize, ySize, zSize, noiseValue
@@ -620,7 +775,7 @@ function module.setValueAndHP(model)
 		end
 	end
 
-	local finalPrice = math.floor(basePrice * mutationMultiplier * RF.getRandomFloat(1,2))
+	local finalPrice = math.floor(basePrice * mutationMultiplier * RF.getRandomFloat(1,2)) * 3
 	local finalHP = math.floor(basePrice* model:GetAttribute("Scale") * RF.getRandomFloat(1,2))
 
 	local valueObject = Instance.new("NumberValue", model)
@@ -642,6 +797,17 @@ function module.breakModel(model, player)
 	local primaryPart = model.PrimaryPart
 	primaryPart.Name = "Handle"
 	local tool = Instance.new("Tool", player.Backpack)
+	local name
+	for i,v in CollectionService:GetTags(model) do
+		if moduleData.mutationMultiplier[v] ~= nil then
+			name = RF.ReplaceUnderscoresWithSpaces(model.Name).." ("..RF.ReplaceUnderscoresWithSpaces(v)..")"
+			break
+		else
+			name = RF.ReplaceUnderscoresWithSpaces(model.Name)
+		end
+	end
+	tool.Name = name
+
 	tool.Grip = CFrame.new(0, 0, primaryPart.Size.Z/2)
 
 	for i,v in model:GetDescendants() do
@@ -657,11 +823,34 @@ function module.breakModel(model, player)
 				weld.Part0 = tool.Handle
 				weld.Part1 = v
 			end
+		elseif v.Name == "Price" then
+			v.Parent = tool
 		end
 	end
 	model:Destroy()
 end
 
+
+function module.runWeatherManager()
+	if weatherRunning.Value == false then
+		if math.random(1, weatherChance.Blood_Moon) == 1 then
+			weatherRunning.Value = true
+			weatherBooleans.Blood_Moon.Value = true
+
+			module.makeBloodMoon(30,40)
+
+
+
+		elseif math.random(1, weatherChance.Silver_Night) == 1 then
+			
+			weatherRunning.Value = true
+			weatherBooleans.Silver_Night.Value = true
+
+			module.makeSilverNight(math.random(30,40))
+
+		end
+	end
+end
 
 
 

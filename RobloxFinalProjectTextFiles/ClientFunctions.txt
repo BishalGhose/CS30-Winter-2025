@@ -22,7 +22,7 @@ local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
 
 local plots = workspace:WaitForChild("Plots")
 local currentPlot = plots:WaitForChild("Plot"..plotNumber)
-local mainParts = currentPlot:WaitForChild("MainParts")
+local chunkParts = currentPlot:WaitForChild("ChunkFolder")
 local buyUIFolder = currentPlot:WaitForChild("BuyUIFolder")
 local outlineBlock = ReplicatedStorage:WaitForChild("OutlineBlock")
 local importantValues = ReplicatedStorage:WaitForChild("ImportantValues")
@@ -76,7 +76,7 @@ function module.putIn3dSpace(coord, priceTable, i)
 
 	local buyChunkBillboardClone = buyChunkBillboard:Clone()
 	buyChunkBillboardClone.Name = coordName
-	buyChunkBillboardClone.Parent = playerGui:WaitForChild("BillboardGuiStorage")
+	buyChunkBillboardClone.Parent = playerGui:WaitForChild("BuyChunkGuiStorage")
 	buyChunkBillboardClone.Adornee = outlineBlockClone
 	buyChunkBillboardClone.Enabled = true
 	buyChunkBillboardClone.StudsOffsetWorldSpace = Vector3.new(0, 3*outlineBlockClone.Size.Y/5, 0)
@@ -122,7 +122,7 @@ function module.checkNearbyY(location, plotNumber)
 	}
 
 	for i,v in nearbyLocations do
-		local chunk = mainParts:FindFirstChild(v[1]..","..v[2]..","..plotNumber)
+		local chunk = chunkParts:FindFirstChild(v[1]..","..v[2]..","..plotNumber)
 
 		if chunk then
 			amountNearby += 1

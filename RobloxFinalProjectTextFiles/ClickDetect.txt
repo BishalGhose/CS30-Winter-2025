@@ -4,7 +4,6 @@ local Players = game:GetService("Players")
 local StarterPlayer = game:GetService("StarterPlayer")
 
 local moduleData = require(ReplicatedStorage:WaitForChild("ModuleData"))
-
 local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 local CF = require(StarterPlayer:WaitForChild("StarterPlayerScripts"):WaitForChild("ClientFunctions"))
 
@@ -16,8 +15,11 @@ local buyChunkBillboardUI = button.Parent.Parent.Parent
 local buyPlotNumber = buyChunkBillboardUI:GetAttribute("BuyPlotNumber")
 local priceFrame = buyChunkBillboardUI:WaitForChild("PriceFrame")
 local priceText = priceFrame:WaitForChild("PriceText")
+local soundEffects = ReplicatedStorage:WaitForChild("SoundEffects")
+local clickSound = soundEffects:WaitForChild("Click")
 
 button.MouseButton1Click:Connect(function()
+	clickSound:Play()
 	local price = priceText.Text
 	CF.buyChunkScreenUI(buyChunkBillboardUI.Adornee.Name, price)
 end)

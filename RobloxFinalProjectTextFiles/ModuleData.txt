@@ -67,7 +67,7 @@ module.BiomeChanceData =
 	["CrimsonGrass"]  		= {.45, 2},
 	["HolyGrass"]     		= {.5, 2},
 	["TwilightGrass"] 		= {.55, 2},
-	["DarkDimensionGrass"]  = {.65, 1.5}
+	["DarkDimensionGrass"]  = {.7, 1.5}
 }
 
 module.BiomeObjectDensity = 
@@ -175,71 +175,89 @@ module.BuyPlotProducts =
 
 
 
-module.ObjectPriceAndHP =
+module.ObjectPrice =
 {
-	["Rock"] = {
-		["normal"] = {10, 30},
-		["spikey"] = {15, 50},
-		["flat"] = {25, 100}
-	},
+	["Normal_Rock"] = 10, 
+	["Spikey_Rock"] = 15, 
+	["Flat_Rock"] = 25,
 	
-	["Cactus"] = {19, 35},
+	["Cactus"] = 19,
 	
-	["Bamboo"] = 0,
+	["Bamboo"] = 17,
 	
-	["DefaultTree"] = 0,
+	["Default_Tree"] = 12,
 	
-	["DeadTree"] = 0,
+	["Dead_Tree"] = 13,
 	
-	["SavanahTree"] = 0,
+	["Savanah_Tree"] = 24,
 	
-	["PineConeTree"] = 0,
+	["Pine_Cone_Tree"] = 15,
 	
-	["BasicBush"] = 0,
+	["Basic_Bush"] = 5,
 	
-	["BerryBush"] = {
-		["Sand"] = 0,
-		["Yellow"] = 0,
-		["Orange"] = 0,
-		["Red"] = 0,
-		["Green"] = 0,
-		["Blue"] = 0,
-		["Brown"] = 0,
-		["Pink"] = 0,
-		["Teal"] = 0,
-		["Violet"] = 0,
-		["White"] = 0,
-		["Black"] = 0
-	},
-	
-	["Ore"] = {
-		["Copper"] = 0,
-		["Iron"] = 0,
-		["Silver"] = 0,
-		["Gold"] = 0,
-		["Amber"] = 0,
-		["Lapis"] = 0,
-		["Obsidian"] = 0,
-		["Emerald"] = 0,
-		["Amethyst"] = 0,
-		["Ruby"] = 0,
-		["Diamond"] = 0
-	}
+	["Sand_Berry_Bush"] = 6,
+	["Yellow_Berry_Bush"] = 8,
+	["Orange_Berry_Bush"] = 12,
+	["Red_Berry_Bush"] = 18,
+	["Green_Berry_Bush"] = 25,
+	["Blue_Berry_Bush"] = 31,
+	["Brown_Berry_Bush"] = 39,
+	["Pink_Berry_Bush"] = 48,
+	["Teal_Berry_Bush"] = 58,
+	["Violet_Berry_Bush"] = 70,
+	["White_Berry_Bush"] = 90,
+	["Black_Berry_Bush"] = 125,
+
+	["Copper_Ore"] = 7,
+	["Iron_Ore"] = 9,
+	["Silver_Ore"] = 12,
+	["Gold_Ore"] = 17,
+	["Amber_Ore"] = 22,
+	["Lapis_Ore"] = 27,
+	["Obsidian_Ore"] = 34,
+	["Emerald_Ore"] = 41,
+	["Amethyst_Ore"] = 50,
+	["Ruby_Ore"] = 75,
+	["Diamond_Ore"] = 125
 }
 
 
-module.Mutations = {
-	"Golden",
-	
+module.mutationMultiplier = {
+	["Golden"] = 3,
+	["Rainbow"] = 5,
+	["Blood_Red"] = 7,
+	["Silver_Surge"] = 10,
+
+}
+
+module.weatherChance = {
+	["Blood_Moon"] = 450000,
+	["Silver_Night"] = 90000,
+
+
 
 
 }
 
 
 
+module.properties = {
+	["Atmosphere"] = 		{"Density", "Offset", "Color", "Decay", "Glare", "Haze"},
+	["Sky"] = 				{"MoonAngularSize", "MoonTextureId", "StarCount"},
+	["Bloom"] =	 			{"Enabled", "Intensity", "Size", "Threshold"},
+	["ColorCorrection"] =	{"Brightness", "Contrast", "Enabled", "Saturation", "TintColor"},
+	["DepthOfField"] = 		{"Enabled", "FarIntensity", "FocusDistance", "InFocusRadius", "NearIntensity"},
+	["SunRays"] = 			{"Enabled", "Intensity", "Spread"}
+}
 
-
-
+module.tweenableProperties = {
+	["Atmosphere"] = {"Density", "Offset", "Color", "Decay", "Glare", "Haze"},
+	["Sky"] = {},
+	["Bloom"] = {"Intensity", "Size", "Threshold"},
+	["ColorCorrection"] = {"Brightness", "Contrast", "Saturation", "TintColor"},
+	["DepthOfField"] = {"FarIntensity", "FocusDistance", "InFocusRadius", "NearIntensity"},
+	["SunRays"] = {"Intensity", "Spread"}
+}
 
 
 
