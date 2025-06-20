@@ -1,3 +1,4 @@
+-- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 local Players = game:GetService("Players")
@@ -7,16 +8,14 @@ local CollectionService = game:GetService("CollectionService")
 local MarketplaceService =  game:GetService("MarketplaceService")
 local RunService = game:GetService("RunService")
 
-local profileStore = require(ServerScriptService.Libaries.ProfileStore)
+-- Module Scripts
 local proceduralFunctions = require(ServerScriptService.ProceduralFunctions)
 local playerData = require(ReplicatedStorage.PlayerData)
 local moduleData = require(ReplicatedStorage.ModuleData)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
 local SF = require(ServerScriptService.ServerFunctions)
-local terrainDecorationsManager = require(ServerScriptService.TerrainDecorationsManager)
-local dataTemplate = require(ServerScriptService.DataTemplate)
-local dataManager = require(ServerScriptService.DataManager)
 
+-- Remote Events
 local remoteEvents = ReplicatedStorage.RemoteEvents
 local updateClientData = remoteEvents.UpdateClientData
 local currentChunkRemote = remoteEvents.CurrentChunkRemote
@@ -26,20 +25,24 @@ local coinsBuyChunk = remoteEvents.CoinsBuyChunk
 local attackObject = remoteEvents.AttackObject
 local sellItem = remoteEvents.SellItem
 
+-- Random things
 local chunkSizes = playerData.ChunkSizes
 local buyPlotProducts = moduleData.BuyPlotProducts
 local plots = workspace.Plots
 local importantValues = ReplicatedStorage.ImportantValues
+local biomeRules = moduleData.biomeRules
+
 
 
 
 local tableOfOccupiedPlots = {}
 
+-- Sets the 4 pltos status to be open
 for i=1, 4 do
 	table.insert(tableOfOccupiedPlots, "Open")
 end
 
-
+-- Tp locations for when you touch the circle thing near the sign you get teleported to one of these locations depending on plot
 local tableOfTPLocations = 
 {
 	["1"] = Vector3.new(128, 140, 128),
@@ -48,6 +51,7 @@ local tableOfTPLocations =
 	["4"] = Vector3.new(-128, 140, 128)
 }
 
+-- When you touch a teleport object you get tp'd to the designated location
 for i,v in plots:GetChildren() do
 	local plotNumber = string.sub(v.Name, -1)
 	v["TeleportPart"..plotNumber].Touched:Connect(function(touchedPart)
@@ -62,86 +66,39 @@ end
 
 
 
-
-local function isStudio()
-	return RunService:IsStudio() and "Test" or "Live"
-end
-local playerStore = profileStore.New(isStudio(), dataTemplate)
-
-local function initialize(player, profile)
-	
-end
-
-
+-- Runs when player added
 Players.PlayerAdded:Connect(function(player)
 	local userId = player.UserId
 	
+	-- Adds a table to the user id to save the player data
 	for i,v in playerData do
 		v[userId] = {}
 	end
 
 
-
-
-	--local profile = playerStore:StartSessionAsync("Player_"..userId, {
-	--	Cancel = function()
-	--		return player.Parent ~= Players
-	--	end,
-	--})
-
-	--if profile ~= nil then
-	--	profile:AddUserId(userId)
-
-	--	profile.OnSessionEnd:Connect(function()
-	--		dataManager.playerProfiles[userId] = nil
-	--		player:Kick("Data error occured, please rejoin")
-	--	end)
-
-
-	--	if player.Parent == Players then
-	--		dataManager.playerProfiles[userId] = profile
-
-	--		initialize(player, profile)
-	--	else
-	--		profile:EndSession()
-
-	--	end
-	--else
-	--	player:Kick("Data error occured, please rejoin")
-	--	profile:Reconcile()
-	--end
-
-
-
-
-
-
-
-
-
-
-
-
-
+	-- This is to show the coins on the top right (roblox built in feature)
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
 
+	-- Number value for the coins and puts it under leaderstats
 	local coins = Instance.new("NumberValue")
 	coins.Name = "Coins"
-	coins.Value = 32423420
+	coins.Value = 32423420 -- edit this if you want
 	coins.Parent = leaderstats
 	
+	-- When the coins value is changed it updates the coins value in player data
 	coins.Changed:Connect(function()
 		playerData["Coins"][userId] = coins.Value
 	end)
 
+	-- Adds a player number value for what plot they are currently on and parents it to player
 	local playerNumber = Instance.new("NumberValue")
 	playerNumber.Parent = player
 	playerNumber.Name = "PlotNumber"
 
-
-
+	
+	-- Finds the first available/open plot and sets the player number to it and sets it as closed
 	for i,v in ipairs(tableOfOccupiedPlots) do
 		if v == "Open" then
 			playerNumber.Value = i
@@ -150,19 +107,13 @@ Players.PlayerAdded:Connect(function(player)
 		end
 	end
 	
-	local plotNumber = playerNumber.Value
 
-	local playerPlot = workspace.Plots["Plot"..plotNumber]
+	local playerPlot = workspace.Plots["Plot"..playerNumber.Value]
 	playerPlot.Sign.Text.SurfaceGui.TextLabel.Text = player.Name.."'s Plot"
 
-	player.CharacterAdded:Connect(function(character)
-		local tool = game.ReplicatedStorage:WaitForChild("MyTool"):Clone()
-		tool:SetPrimaryPartCFrame(character:GetPivot())
 
-		tool.Parent = player:WaitForChild("Backpack")
-	end)
 
-	
+	-- Inserts  coordinates {1,1} to the owned chunks so we start at 1,1, can be easily adjusted to insert more coordinates
 	local ownedChunks = playerData["OwnedChunks"][userId]
 	for i = 1, 1 do
 		for x = 1, 1 do
@@ -170,87 +121,83 @@ Players.PlayerAdded:Connect(function(player)
 		end
 	end
 
-
-
-	
-	SF.makeMap(plotNumber, ownedChunks, player)
-	
+	-- Runs the main function to make the map
+	SF.makeMap(playerNumber.Value, ownedChunks, player)
 end)
 
 
-
+-- When player leaves pretty much deletes all their stuff
 Players.PlayerRemoving:Connect(function(player)
 	local userId = player.UserId
 	local plotNumber = player.PlotNumber.Value
 	local plotFolder = workspace.Plots["Plot"..plotNumber]
 	
+	-- Removes all their data
 	for i,v in playerData do
 		v[userId] = nil
 	end
 	
+	-- Sets the sign text to empty plot
 	plotFolder.Sign.Text.SurfaceGui.TextLabel.Text = "Empty Plot"
 
+	-- Deletes the map of the plot
 	SF.deleteMap(plotFolder)
 
+	-- Sets the plot to open status
 	tableOfOccupiedPlots[player.PlotNumber.Value] = "Open" 
-	playerData[player.UserId] = nil
 end)
 
 
 
-
-
+-- When client presses button and fires this remote event it teleports the players character to home
 teleportHome.OnServerEvent:Connect(function(player)
 	player.Character:PivotTo(CFrame.new(Vector3.new(0, 132, 0)))
 end)
 
 
-
+-- Updates the current chunk the player is interacting with 
 currentChunkRemote.OnServerEvent:Connect(function(player, buyChunk)
 	playerData["CurrentBuyChunk"][player.UserId]= buyChunk
 end)
 
 
-
+-- When player wants to buy a chunk and fires the event it checks if they have enough money and runs the buy chunk function for that coordinate and minuses their amount
 coinsBuyChunk.OnServerEvent:Connect(function(player, coordinateString)
 	local splitCoords = string.split(coordinateString, ",")
 	local coordsOnly = splitCoords[1]..","..splitCoords[2]
 	local chunkPrice = playerData["ChunkCoinPrices"][player.UserId][coordsOnly]
-	if player.leaderstats.Coins.Value >= chunkPrice then
+	if player.leaderstats.Coins.Value >= chunkPrice then -- Checks if player has enough coins
 		player.leaderstats.Coins.Value -= chunkPrice
+		SF.buyChunk(coordinateString, player.UserId, player)
 	end
-	SF.buyChunk(coordinateString, player.UserId, player)
 end)
 
-
+-- When client fires this event the server destroys the objecct the players selling then adds the coin amountn to the player and fires an event back
 sellItem.OnServerEvent:Connect(function(player)
 	local character = player.Character
-
-
 	for i,v in character:GetChildren() do
 		if v:IsA("Tool") then
 			local price = v.Price.Value
 			SF.changePlayersMoney(player, price)
 			sellItem:FireClient(player, price)
-			
 			v:Destroy()
 		end
 	end
 end)
 
 
-
+-- This remote function is used  get a price table for the coordinates for the player passes in
 outerChunkPrice.OnServerInvoke = function(player, coordsTable)
 	local priceTable = {}
-	for i,v in ipairs(coordsTable) do
+	for i,v in ipairs(coordsTable) do 
 		local price
 		local stringCoord = v[1]..","..v[2]
 		local buyPlotNumber = math.max(v[1], v[2])
 		
-		local checkPrice = playerData["ChunkCoinPrices"][player.UserId][stringCoord]
-		if checkPrice then
+		local checkPrice = playerData["ChunkCoinPrices"][player.UserId][stringCoord] 
+		if checkPrice then -- Checks if the price already exists
 			price = checkPrice
-		else
+		else --If not make new price
 			price = math.round(RF.priceCacher(buyPlotNumber) * RF.getRandomFloat(0.5, 1.5))
 			playerData["ChunkCoinPrices"][player.UserId][stringCoord] = price
 		end
@@ -261,10 +208,10 @@ outerChunkPrice.OnServerInvoke = function(player, coordsTable)
 end
 
 
-
+-- This remote function is used to attack an object and lower its HP. If its Hp is lower than 0 or 0 then the breakobject function runs
+-- Returns continue or broken to the client depending on HP
 attackObject.OnServerInvoke = function(player, model)
 	RF.shakeModel(model)
-
 	local currentHP = model.CurrentHP
 	currentHP.Value -= 5
 	
@@ -278,31 +225,27 @@ end
 
 
 
-
+-- This is to process Robux Payments
 MarketplaceService.ProcessReceipt = function(receiptInfo)
-	print(receiptInfo)
+	-- Information
 	local userId = receiptInfo.PlayerId
 	local player = Players:GetPlayerByUserId(userId)
-
-	if not player then
+	local productId = receiptInfo.ProductId
+	
+	if not player then -- Player might leave while purchasing
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
-	local productId = receiptInfo.ProductId
-
+	-- If the product id of the purchase item is equal to any of the product ids in the buyPlotProducts table then its validated and player buys chunk is successful
 	for i,v in buyPlotProducts do
 		if productId == nil then
 			warn("nil")
-				--and receiptInfo.RobuxSpent == v[2]
 		elseif productId == v[1] then
 			local coordinateString = playerData["CurrentBuyChunk"][receiptInfo.PlayerId]
-			
 			SF.buyChunk(coordinateString, userId, player, receiptInfo)
 			return Enum.ProductPurchaseDecision.PurchaseGranted
 		end
 	end
-
-
 
 	return Enum.ProductPurchaseDecision.NotProcessedYet
 end
@@ -322,6 +265,28 @@ end
 
 
 
+-- Adds objects to the maps like trees bushes etc.
+local function decorateMap(chunkModel, plotFolder)
+	-- Variables (gets name, rulesdata, RNG, and #objects)
+	local biomeName = chunkModel:GetTags()[1]
+	local biomeRuleList = biomeRules[biomeName]
+	local randomNumber = math.random(1, 1000)
+	local objectCounter = plotFolder.NumberOfObjects
+
+
+	-- Check each threshold to see to see if and what object we should place
+	for i, biomeRule in ipairs(biomeRuleList) do
+		if randomNumber > biomeRule.threshold then
+			-- Get the decoration function and argumentlist
+			local decorateFunction = proceduralFunctions[biomeRule.functionName]
+			local argumentList = biomeRule.arguments or {}
+			decorateFunction(chunkModel, biomeName, plotFolder, unpack(argumentList))
+			return
+		end
+	end
+
+	objectCounter.Value += 1 -- Increases object count
+end
 
 
 
@@ -334,11 +299,7 @@ end
 
 
 
-
-
-
-
-
+-- This is for adding objects onto the map over time
 while true do
 	for plotNumber,v in ipairs(tableOfOccupiedPlots) do
 		if v == "Closed" then
@@ -367,16 +328,13 @@ while true do
 					local chunkPos = SF.findListPos(RNG, 1, tableOfDensities)
 					local chunk = tableOfChunks[chunkPos]
 
-					terrainDecorationsManager.decorateMap(chunk, plotFolder)
+					decorateMap(chunk, plotFolder)
 					plotFolder.NumberOfObjects.Value += 1
 				end
 			--end		
 		end
 	end
 
-
 	SF.runWeatherManager()
 	task.wait(1)
 end
-
---math.random() >= fillRatio

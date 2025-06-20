@@ -1,38 +1,39 @@
+-- Services
 local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
-local StarterPlayer = game:GetService("StarterPlayer")
 
+-- Module Scripts
 local moduleData = require(ReplicatedStorage:WaitForChild("ModuleData"))
-local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
-local CF = require(StarterPlayer:WaitForChild("StarterPlayerScripts"):WaitForChild("ClientFunctions"))
 
-local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
-
+-- Random things
 local localPlayer = Players.LocalPlayer
 local button = script.Parent
-local buyChunkBillboardUI = button.Parent.Parent.Parent
-local buyPlotNumber = buyChunkBillboardUI:GetAttribute("BuyPlotNumber")
-local priceFrame = buyChunkBillboardUI:WaitForChild("PriceFrame")
-local priceText = priceFrame:WaitForChild("PriceText")
-local soundEffects = ReplicatedStorage:WaitForChild("SoundEffects")
-local clickSound = soundEffects:WaitForChild("Click")
+local buyPlotUI = button.Parent.Parent.Parent
+local buyPlotNumber = buyPlotUI:GetAttribute("BuyPlotNumber")
+local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+local currentBuyChunk = remoteEvents:WaitForChild("CurrentChunkRemote")
+local clickSound = ReplicatedStorage:WaitForChild("SoundEffects"):WaitForChild("Click")
 
+-- When button is clicked it prompts a developer product purchase, plays sound and updates the current chunk the player is 
+-- Interacting with via rmeote event
 button.MouseButton1Click:Connect(function()
 	clickSound:Play()
-	local price = priceText.Text
-	CF.buyChunkScreenUI(buyChunkBillboardUI.Adornee.Name, price)
+	MarketplaceService:PromptProductPurchase(localPlayer, moduleData.BuyPlotProducts[buyPlotNumber][1])
+	currentBuyChunk:FireServer(buyPlotUI.Adornee.Name)
 end)
 
-
+-- Makes the selection box/chunk skeleton visible when mouse hovers
 button.MouseEnter:Connect(function()
-	if buyChunkBillboardUI.Adornee then
-		buyChunkBillboardUI.Adornee:FindFirstChild("SelectionBox").Visible = true
+	if buyPlotUI.Adornee then
+		buyPlotUI.Adornee:FindFirstChild("SelectionBox").Visible = true
+	end
+end)
+-- Makes the selection box/chunk skeleton invisible when mouse leaves
+button.MouseLeave:Connect(function()
+	if buyPlotUI.Adornee then
+		buyPlotUI.Adornee:FindFirstChild("SelectionBox").Visible = false
 	end
 end)
 
-button.MouseLeave:Connect(function()
-	if buyChunkBillboardUI.Adornee then
-		buyChunkBillboardUI.Adornee:FindFirstChild("SelectionBox").Visible = false
-	end
-end)
+

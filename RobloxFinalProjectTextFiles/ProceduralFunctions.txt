@@ -1,3 +1,4 @@
+-- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -5,13 +6,15 @@ local ServerStorage = game:GetService("ServerStorage")
 local RunService = game:GetService("RunService")
 local StarterPlayer = game:GetService("StarterPlayer")
 
+
+-- Module Scripts
 local weatherBooleans = ServerStorage.WeatherBooleans
 local biomesFolder = ReplicatedStorage.Biomes
 local moduleData = require(ReplicatedStorage.ModuleData)
 local SF = require(ServerScriptService.ServerFunctions)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
 
-
+-- Function to run all the mutation chances
 local function runMutations(model, plotFolder)
 	SF.runGoldenChance(model)
 	SF.runRainbowChance(model, plotFolder)
@@ -19,15 +22,20 @@ local function runMutations(model, plotFolder)
 	SF.runSilverSurgeChance(model)
 end
 
+
 local module = {}
 
+
+-- Rock function
 function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, scaleFactor)
 	local model = SF.makePartModel(plotFolder, shape.."_Rock")
 	local grass = chunkPart.Grass      
 
+
+	-- Make rocks and depending on the shape, there is different adjusted values for scale and offset positions. Then finalizes their positions
+	-- Sets the
 	if shape == "Normal" then ---------------------------------------------------------------------
-		
-		for i = 1, math.random(2,3) do
+		for i = 1, math.random(2,3) do -- Makes 2-3 studs around and parents them to the model
 			SF.studMaker(
 				biomesFolder[biome].Stud,
 				model,
@@ -38,12 +46,10 @@ function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, 
 			)
 		end
 
-
-		model.PrimaryPart = model:GetChildren()[1]
 		SF.finalizePosition(model, grass, 0.05, heightDifference)
-
+		
 	elseif shape == "Spikey" then ---------------------------------------------------------------------
-		for i = 1, math.random(3,4) do
+		for i = 1, math.random(3,4) do -- Makes 3-4 studs around and parents them to the model
 			SF.studMaker(
 				biomesFolder[biome].Stud,
 				model,
@@ -54,12 +60,10 @@ function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, 
 			)
 		end
 
-
-		model.PrimaryPart = model:GetChildren()[1]
 		SF.finalizePosition(model, grass, 0.04, heightDifference)
 
 	elseif shape == "Flat" then ---------------------------------------------------------------------
-		for i = 1, math.random(1,2) do
+		for i = 1, math.random(1,2) do -- Makes 1-2 studs around and parents them to the model
 			SF.studMaker(
 				biomesFolder[biome].Stud,
 				model,
@@ -69,14 +73,13 @@ function module.makeRock(chunkPart, biome, plotFolder, shape, heightDifference, 
 				15
 			)
 		end
-
-
-		model.PrimaryPart = model:GetChildren()[1]
+		
 		SF.finalizePosition(model, grass, 0.02, heightDifference)
 	end
 	
+	-- Sets the primary part to the first object inside the model, runs mutations and sets value + hp
+	model.PrimaryPart = model:GetChildren()[1]
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
@@ -86,94 +89,86 @@ end
 
 
 
-
+-- Cactus function
 function module.makeCactus(chunkPart, biome, plotFolder)
-	function SF.updateCactusBorders(cactusPart, offset)
-		cactusPart.bordersidey.Size = Vector3.new(cactusPart.Size.X - offset, cactusPart.Size.Y + offset, cactusPart.Size.Z - offset)
-		cactusPart.bordersidex.Size = Vector3.new(cactusPart.Size.X + offset, cactusPart.Size.Y - offset, cactusPart.Size.Z - offset)
-		cactusPart.bordersidez.Size = Vector3.new(cactusPart.Size.X - offset, cactusPart.Size.Y - offset, cactusPart.Size.Z + offset)
-	end
-
+	-- Variables and model
 	local model = SF.makePartModel(plotFolder, "Cactus")
-
 	local mainCactusPart = biomesFolder["DesertGrass"].CactusPart:Clone()
-	mainCactusPart.Parent = model
-	mainCactusPart.Name = "MainCactusPart"
-
 	local cactusThickness = RF.getRandomFloat(2, 3)
 	local cactusYSize = (RF.getRandomFloat(1.9, 2.8))^2 + cactusThickness*2
 
+	-- Sets the properties and updates the cactus borders once new size is set
+	mainCactusPart.Parent = model
+	mainCactusPart.Name = "MainCactusPart"
 	mainCactusPart.Size = Vector3.new(cactusThickness, cactusYSize, cactusThickness)
 	SF.updateCactusBorders(mainCactusPart, 0.5)
 	
-	
+	-- Runs the function to make the 4 side cactus branches
 	SF.make4SideBranch(mainCactusPart,  biomesFolder.DesertGrass["CactusPart"], cactusThickness, "Cactus", 1, 2, -mainCactusPart.Size.Y/4)
 	
 	
-	local grass = chunkPart.Grass
+	-- Sets the primary part, runs mutations and sets value + hp and finalizes position
 	model.PrimaryPart = mainCactusPart
-	SF.finalizePosition(model, grass, 0.1, mainCactusPart.Size.Y/2)
+	SF.finalizePosition(model, chunkPart.Grass, 0.1, mainCactusPart.Size.Y/2)
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
 -------------------------------------------------------------------------------------------------------------------------------------
 
-
+-- Bamboo function
 function module.makeBamboo(chunkPart, biome, plotFolder)
 	local model = SF.makePartModel(plotFolder, "Bamboo")
-	
-
 	local ySize = biomesFolder[biome].Bamboo.TallPart.Size.Y
-	local numberOfParts = math.random(1,3)
 	
+	-- Gets a random amount of parts and stacks bamboo depending on i
+	local numberOfParts = math.random(1,3)
 	for i = 1 , numberOfParts do
 		local bamboo = biomesFolder[biome].Bamboo:Clone()
 		bamboo.Parent = model
-		if i == 1 then
+		if i == 1 then -- Sets the first bamboo as the primary part
 			model.PrimaryPart = bamboo.TallPart
 		end
-		bamboo:PivotTo(CFrame.new(Vector3.new(bamboo.PrimaryPart.Position.X , i * ySize , bamboo.PrimaryPart.Position.Z)))
+		bamboo:PivotTo(CFrame.new(Vector3.new(bamboo.PrimaryPart.Position.X , i * ySize , bamboo.PrimaryPart.Position.Z))) -- moves the bamboo section upwards
 	end
 
-	local grass = chunkPart.Grass
-	SF.finalizePosition(model, grass, 0.09, 0)
+	-- runs mutations and sets value + hp and finalizes postion
+	SF.finalizePosition(model, chunkPart.Grass, 0.09, 0)
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
 
-
+-- Default tree function 
 function module.makeDefaultTree(chunkPart, biome, plotFolder)
 	local model = SF.makePartModel(plotFolder, "Default_Tree")
-	
-	local trunk, thicknessSize = SF.makeTrunk(model, biome)
+	local trunk, thicknessSize = SF.makeTrunk(model, biome) -- Makes trunk
 
+	-- Draws the leaves on the top tip of the trunk
 	for i = 1, math.random(7,8) do
+		-- Some biomes have 2 different types of leaves so this checks for that and if they have 2 it picks a random one each time
 		local leaf
-		
 		if biomesFolder[biome]:FindFirstChild("TreeLeaf2") then
 			leaf = math.random(1,2) == 1 and biomesFolder[biome].TreeLeaf:Clone() or biomesFolder[biome].TreeLeaf2:Clone()
 		else
 			leaf = biomesFolder[biome].TreeLeaf:Clone()
 		end
 
+		-- Sets its properties and parent and adjusts the color offset
 		leaf.Parent = model
-		
 		leaf.Position = Vector3.new(trunk.Position.X + RF.getRandomFloat(-4, 4), trunk.Position.Y + trunk.Size.Y/2 + RF.getRandomFloat(-1.5, 1.5), trunk.Position.Z + RF.getRandomFloat(-4, 4))
 		leaf.Size = Vector3.new(RF.getRandomFloat(6, 10), RF.getRandomFloat(5, 7.5), RF.getRandomFloat(6, 10))
 		SF.colorOffsetPart(leaf, -5, 45)
 	end
 
-	local upperStemTable = SF.make4SideBranch(trunk, biomesFolder[biome].Wood, thicknessSize, "Default_Tree", 1.5, 4, 0)
+	local upperStemTable = SF.make4SideBranch(trunk, biomesFolder[biome].Wood, thicknessSize, "Default_Tree", 1.5, 4, 0) -- Makes the tree branches
 
+	-- Makes the leaves on the tip of the tree branches
 	for i, v in upperStemTable do
 		local upperPos = v.Position.Y + v.Size.Y/2
 		local leaf
 	
-		if biomesFolder[biome]:FindFirstChild("TreeLeaf2") then
+		if biomesFolder[biome]:FindFirstChild("TreeLeaf2") then -- Checks if 2 types of leaves
 			leaf = math.random(1,2) == 1 and biomesFolder[biome].TreeLeaf:Clone() or biomesFolder[biome].TreeLeaf2:Clone()
 		else
 			leaf = biomesFolder[biome].TreeLeaf:Clone()
@@ -181,8 +176,7 @@ function module.makeDefaultTree(chunkPart, biome, plotFolder)
 		
 		leaf.Parent = model
 		leaf.Position = Vector3.new(v.Position.X, upperPos, v.Position.Z)
-		
-		for i = 1, math.random(2,3) do
+		for i = 1, math.random(2,3) do -- Makes 2-3 leave studs on the tree branches
 			local positionOffset = Vector3.new(RF.getRandomFloat(-1,1), RF.getRandomFloat(-1,1), RF.getRandomFloat(-1,1))
 			local sizeOffset = Vector3.new(RF.getRandomFloat(-0.3,0.3), RF.getRandomFloat(-0.3, 0.3), RF.getRandomFloat(-0.3,0.3))
 			SF.studMaker(leaf, model, positionOffset, sizeOffset, -5, 45)
@@ -190,38 +184,37 @@ function module.makeDefaultTree(chunkPart, biome, plotFolder)
 	end
 	
 
-	local grass = chunkPart.Grass
+	-- runs mutations and sets value + hp and finalizes postion and sets primary part
 	model.PrimaryPart = trunk
-	SF.finalizePosition(model, grass, 0.08, (trunk.Size.Y/2))
+	SF.finalizePosition(model, chunkPart.Grass, 0.08, (trunk.Size.Y/2))
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
 
-
+-- Dead tree function
 function module.makeDeadTree(chunkPart, biome, plotFolder)
-	local model = SF.makePartModel(plotFolder, "Dead_Tree")
-	local trunk, thicknessSize = SF.makeTrunk(model, biome)
-	SF.make4SideBranch(trunk, biomesFolder[biome].Wood, thicknessSize, "Dead_Tree", 1.3, 3, 2)
+	local model = SF.makePartModel(plotFolder, "Dead_Tree") -- Sets the model
+	local trunk, thicknessSize = SF.makeTrunk(model, biome) -- Makes trunk
+	SF.make4SideBranch(trunk, biomesFolder[biome].Wood, thicknessSize, "Dead_Tree", 1.3, 3, 2) -- Makes the branches
 
-
-	local grass = chunkPart.Grass
+	-- runs mutations and sets value + hp and finalizes postion and sets primary part
 	model.PrimaryPart = trunk
-	SF.finalizePosition(model, grass, 0.06, (trunk.Size.Y/2))
+	SF.finalizePosition(model, chunkPart.Grass, 0.06, (trunk.Size.Y/2))
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
 
-
+-- Savannah tree function
 function module.makeSavanahTree(chunkPart, biome, plotFolder)
+	-- variables
 	local model = SF.makePartModel(plotFolder, "Savanah_Tree")
 	local referenceLeaf = biomesFolder[biome].TreeLeaf
 	local referenceWood = biomesFolder[biome].Wood
 	local thicknessSize = RF.getRandomFloat(3, 4)
 
+	-- Makes a wood segment for later use
 	local function createWoodSegment(size)
 		local segment = referenceWood:Clone()
 		segment.Size = size
@@ -229,38 +222,43 @@ function module.makeSavanahTree(chunkPart, biome, plotFolder)
 		return segment
 	end
 
+	-- Sizes
 	local bottomWoodLength = RF.getRandomFloat(9, 13)
 	local middleWoodLength = bottomWoodLength * 0.7 + thicknessSize
 	local topWoodLength = bottomWoodLength * RF.getRandomFloat(0.5,0.9)
 	
+	-- Wood references
 	local bottomWood = createWoodSegment(Vector3.new(thicknessSize, bottomWoodLength, thicknessSize))
 	local middleWood = createWoodSegment(Vector3.new(thicknessSize, thicknessSize, middleWoodLength))
 	local topWood = createWoodSegment(Vector3.new(thicknessSize, topWoodLength, thicknessSize))
 		
+	-- Sets the positions
 	middleWood.Position = Vector3.new(bottomWood.Position.X + middleWoodLength/2 - thicknessSize/2, bottomWood.Position.Y + bottomWoodLength/2 + thicknessSize/2, bottomWood.Position.Z)
 	topWood.Position = Vector3.new(middleWood.Position.X + middleWoodLength/2 - thicknessSize/2, middleWood.Position.Y + topWoodLength/2 + thicknessSize/2, middleWood.Position.Z)
 
+	-- Makes savannah leaf on top of the tree
 	local topOfTree = topWood.Position + Vector3.new(0, topWood.Size.Y/2, 0	)	
 	SF.makeSavanahLeaf(model, biome, topOfTree)
 	
-	local grass = chunkPart.Grass
+	-- runs mutations and sets value + hp and finalizes postion and sets primary part
 	model.PrimaryPart = bottomWood
-	SF.finalizePosition(model, grass, 0.02, bottomWood.Size.Y/2, math.random(1,4))
+	SF.finalizePosition(model,chunkPart.Grass, 0.02, bottomWood.Size.Y/2, math.random(1,4))
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
 
 
 
-
+-- Pine cone tree function
 function module.makePineConeTree(chunkPart, biome, plotFolder)
+	-- Model and makes the trunk
 	local model = SF.makePartModel(plotFolder, "Pine_Cone_Tree")
-
 	local trunk = biomesFolder[biome].Wood:Clone()
 	trunk.Size = Vector3.new(2.3, 15, 2.3)
 	trunk.Parent = model
+
+	-- Gets a random amoutn of leaf layers and starting size then each layer shrinks in size and goes up every time to create pinecone tree effect
 	local leafLayers = math.random(8,12)
 	local startingSize = math.random(3,12)
 	for i = 1 , leafLayers do
@@ -272,15 +270,12 @@ function module.makePineConeTree(chunkPart, biome, plotFolder)
 
 	end
 
-	local grass = chunkPart.Grass
+	-- runs mutations and sets value + hp and finalizes postion and sets primary part
 	model.PrimaryPart = trunk
-
-	SF.finalizePosition(model, grass, 0.02, (trunk.Size.Y/2))
+	SF.finalizePosition(model, chunkPart.Grass, 0.02, (trunk.Size.Y/2))
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end 
-
 
 
 
@@ -290,7 +285,7 @@ end
 function module.makeBasicBush(chunkPart, biome, plotFolder)
 	local model = SF.makePartModel(plotFolder, "Basic_Bush")
 
-
+	-- Makes 2-3 studs 
 	for i=1, math.random(2,3) do
 		SF.studMaker(
 			biomesFolder[biome].Bush,
@@ -303,13 +298,11 @@ function module.makeBasicBush(chunkPart, biome, plotFolder)
 	end
 
 
-	local grass = chunkPart.Grass
+	-- runs mutations and sets value + hp and finalizes postion and sets primary part
 	local stud = model:GetChildren()[1]
-	model.PrimaryPart = stud
-
-	SF.finalizePosition(model, grass, 0.01, (stud.Size.Y/2))
+	model.PrimaryPart =  model:GetChildren()[1]
+	SF.finalizePosition(model, chunkPart.Grass, 0.01, (stud.Size.Y/2))
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
@@ -317,18 +310,18 @@ end
 
 
 function module.makeBerryBush(chunkPart, biome, plotFolder)
+	-- Gets the berry chance list and gets the sums of all the chances
 	local berryChanceList = moduleData.BerryBiomeChance[biome]
 	local summedNumber = 0
-
 	for i,v in berryChanceList do
 		summedNumber += v
 	end
 
-
+	-- From that a random number is chosen from 1-sum and finds the list position to pick a random berry
 	local berryType = moduleData.BerryNumber[SF.findListPos(math.random(1, summedNumber), 1, berryChanceList)]
 	local model = SF.makePartModel(plotFolder, berryType.."_Berry_Bush")
 
-
+	-- makes 1 bush
 	local bush = SF.studMaker(
 		biomesFolder[biome].Bush,
 		model,
@@ -337,32 +330,32 @@ function module.makeBerryBush(chunkPart, biome, plotFolder)
 		-10,
 		40
 	)
-	
-	SF.makeBlockSpecs(bush, 6, 8, model, "Berries", berryType)
+	-- Makes berries around that bush
+	SF.makeBlockSpecs(bush, model, "Berries", berryType) 
 	
 
-	local grass = chunkPart.Grass
+
+	-- runs mutations and sets value + hp and finalizes postion and sets primary part
 	model.PrimaryPart = bush
-
-	SF.finalizePosition(model, grass, 0.04, (bush.Size.Y/2))
+	SF.finalizePosition(model, chunkPart.Grass, 0.04, (bush.Size.Y/2))
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
-
+ 
 
 function module.makeOreBlock(chunkPart, biome, plotFolder)
+	-- Gets the ore chance list and gets the sums of all the chances
 	local oreChanceList = moduleData.OreBiomeChance[biome]
 	local summedNumber = 0
-
 	for i,v in oreChanceList do
 		summedNumber += v
 	end
-
+	-- From that a random number is chosen from 1-sum and finds the list position to pick a random ore
 	local oreType = moduleData.OreNumber[SF.findListPos(math.random(1, summedNumber), 1, oreChanceList)]
 	local model = SF.makePartModel(plotFolder, oreType.."_Ore")
 
+	-- Makes 1 stone stud
 	local stud = SF.studMaker(
 		biomesFolder[biome].Stud,
 		model,
@@ -372,47 +365,17 @@ function module.makeOreBlock(chunkPart, biome, plotFolder)
 		-20
 	)
 		
-	SF.makeBlockSpecs(stud, 6, 8, model, "Ores", oreType)
+	-- Puts ores around it
+	SF.makeBlockSpecs(stud, model, "Ores", oreType)
 
 
-	local grass = chunkPart.Grass
+	-- runs mutations and sets value + hp and finalizes postion and sets primary part
 	model.PrimaryPart = model:GetChildren()[1]
-	SF.finalizePosition(model, grass, 0.02, (stud.Size.Y/2))
+	SF.finalizePosition(model, chunkPart.Grass, 0.02, (stud.Size.Y/2))
 	runMutations(model, plotFolder)
-
 	SF.setValueAndHP(model)
 end
 
-
-
---function module.makeGrassCluster(chunkPart, Biome, plotFolder)
---	local model = SF.makePartModel(plotFolder, "Grass_Cluster")
---	local grass = chunkPart.Grass
-
---	for i = 1, math.random(3,6) do
---		SF.studMaker(biomesFolder[biome].GrassBlock,
---			model,
---			Vector3.new(RF.getRandomFloat(-4,4),RF.getRandomFloat(-0.5,0.5) + heightDifference, RF.getRandomFloat(-4,4)),
---			Vector3.new(RF.getRandomFloat(0.8, 1.5), RF.getRandomFloat(2, 4), RF.getRandomFloat(0.8, 1.5)),
---			-10,
---			10
---		)
---	end
-
---	model.PrimaryPart = model:getChildren()[1]
---	SF.finalizePosition(model, grass, 0.04, (model.PrimaryPart.Size.Y/2) + heightDifference)
---	SF.runGoldenChance(model, plotFolder)
---
---end
---	)
-
---SF.finalizePosition(model, grass, 0.03, heightDifference)
---SF.runGoldenChance(model, plotFolder)
---SF.runRainbowChance(model, plotFolder)
---end
-
-
---	end
 
 
 

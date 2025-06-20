@@ -1,25 +1,28 @@
+-- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
-
+-- Module Scripts
 local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 local moduleData = require(ReplicatedStorage.ModuleData)
 local playerData = require(ReplicatedStorage.PlayerData)
 
+-- Remote Events
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local outerChunkPrice = remoteEvents:WaitForChild("OuterChunkPrice")
 local coinsBuyChunk = remoteEvents:WaitForChild("CoinsBuyChunk")
 
-
+-- Player Stuff
 local localPlayer = Players.LocalPlayer
 local userId = localPlayer.UserId
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 local mouse = localPlayer:GetMouse()
 local plotNumber = localPlayer:WaitForChild("PlotNumber").Value
 
+-- Random Objects
 local plots = workspace:WaitForChild("Plots")
 local currentPlot = plots:WaitForChild("Plot"..plotNumber)
 local chunkParts = currentPlot:WaitForChild("ChunkFolder")
@@ -29,6 +32,7 @@ local importantValues = ReplicatedStorage:WaitForChild("ImportantValues")
 local priceCache = moduleData["PriceCache"]
 local chunkSizes = playerData["ChunkSizes"]
 
+-- UI Objects
 local buyChunkBillboard = playerGui:WaitForChild("BuyChunkBillboard")
 local screenGui = playerGui:WaitForChild("ScreenGui")
 local buyChunkFrame = screenGui:WaitForChild("BuyChunkFrame")
@@ -37,107 +41,70 @@ local moneyText = buyChunkFrame:WaitForChild("MoneyText")
 local module = {}
 
 
-
+-- When function is called it takes the owned chunks coordinates and asks the server for price via remote function
 function module.displayBuyChunks()
-
 	local coordinatesTable = playerData["OwnedChunks"][userId]
 	local buyCoordinates = RF.getBuyCoordinates(coordinatesTable)
 	local priceTable = outerChunkPrice:InvokeServer(buyCoordinates)
 
+	-- Checks if that buy chunk UI already exists and if not it creates a new one
 	for i,coord in ipairs(buyCoordinates) do
 		if buyUIFolder:FindFirstChild(coord[1]..","..coord[2]..","..plotNumber) == nil then
-			module.putIn3dSpace(coord, priceTable, i)
+			module.buyChunkArea(coord, priceTable, i)
 		end
 	end
 end
 
 
 
-
-function module.putIn3dSpace(coord, priceTable, i)
+-- Function to create the UI for the buy chunk
+function module.buyChunkArea(coord, priceTable, i)
 	local increment = importantValues:WaitForChild("Increment").Value
 	local x, z = RF.coordinateScale(increment, plotNumber, coord)
 	local coordName = coord[1]..","..coord[2]..","..plotNumber
-
+	
+	-- Sets the max buy plot nubmer to be 21 because the robux developer products only goes up to 21
 	local buyPlotNumber = math.max(coord[1], coord[2])
 	if buyPlotNumber > 21 then
 		buyPlotNumber = 21
 	end
-
-
+	local robuxPrice = moduleData.BuyPlotProducts[buyPlotNumber][2]
+	
+	-- Creates an out outline clone and sets it in the proper location and size
 	local outlineBlockClone = outlineBlock:Clone()
 	outlineBlockClone.Parent = buyUIFolder
-	print(chunkSizes)
 	local coordSize = chunkSizes[userId][coord[1]..","..coord[2]]
 	outlineBlockClone.Size = Vector3.new(coordSize[1], coordSize[2], coordSize[3])
 	outlineBlockClone.Position = Vector3.new(x, coordSize[2]/2, z)
 	outlineBlockClone.Name = coordName
 
-
+	-- Creates the buy chunk billboard for the chunk
 	local buyChunkBillboardClone = buyChunkBillboard:Clone()
 	buyChunkBillboardClone.Name = coordName
 	buyChunkBillboardClone.Parent = playerGui:WaitForChild("BuyChunkGuiStorage")
 	buyChunkBillboardClone.Adornee = outlineBlockClone
 	buyChunkBillboardClone.Enabled = true
 	buyChunkBillboardClone.StudsOffsetWorldSpace = Vector3.new(0, 3*outlineBlockClone.Size.Y/5, 0)
-
-
 	buyChunkBillboardClone:WaitForChild("PriceFrame"):WaitForChild("PriceText").Text = "$ "..RF.addCommas(priceTable[i])
-
 	buyChunkBillboardClone:SetAttribute("BuyPlotNumber", buyPlotNumber)
-	local price = moduleData.BuyPlotProducts[buyPlotNumber][2]
-	buyChunkBillboardClone:WaitForChild("RobuxBuyFrame"):WaitForChild("Frame"):WaitForChild('TextButton').Text = price
+	buyChunkBillboardClone:WaitForChild("RobuxBuyFrame"):WaitForChild("Frame"):WaitForChild('TextButton').Text = robuxPrice
 end
 
 
-
+-- Prompts the final buy UI screen to buy plot with coins
 function module.buyChunkScreenUI(coords, price)
 	moneyText.Text = price
 	module.tweenUIPos(buyChunkFrame, {0.5,0}, {0.5,0})
 	buyChunkFrame:WaitForChild("Coordinate").Value = coords
 end
 
+-- Tweens UI to a given location
 function module.tweenUIPos(UI, pos1, pos2)
 	local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0, false, 0)
 	local goal = {Position = UDim2.new(pos1[1], pos1[2], pos2[1], pos2[2])}
 	local tween = TweenService:Create(UI, tweenInfo, goal)
 	tween:Play()
 end
-
-
-
-
---[[
-function module.checkNearbyY(location, plotNumber)
-	local ySize = 0
-	local yPosition = 0
-	local amountNearby = 0
-
-	local nearbyLocations = 
-	{
-		{location[1] + 1, location[2]},
-		{location[1], location[2] + 1},
-		{location[1] - 1, location[2]},
-		{location[1], location[2] - 1}
-	}
-
-	for i,v in nearbyLocations do
-		local chunk = chunkParts:FindFirstChild(v[1]..","..v[2]..","..plotNumber)
-
-		if chunk then
-			amountNearby += 1
-			ySize += chunk.Size.Y
-			yPosition += chunk.Position.Y
-		end
-	end
-
-	return ySize/amountNearby, yPosition/amountNearby
-end
-]]--
-
-
-
-
 
 
 

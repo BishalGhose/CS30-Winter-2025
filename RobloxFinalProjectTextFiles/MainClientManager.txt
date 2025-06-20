@@ -1,9 +1,11 @@
+-- Services
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 local StarterGui = game:GetService("StarterGui")
 
+-- Player things and random things
 local localPlayer = Players.LocalPlayer
 local userId = localPlayer.UserId
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -18,7 +20,7 @@ local currentPlot = plot:WaitForChild("Plot"..plotNumber)
 local buyUIFolder = currentPlot:WaitForChild("BuyUIFolder")
 local soundsFolder = ReplicatedStorage:WaitForChild("SoundEffects")
 
-
+-- Remote Events
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local currentChunkRemote = remoteEvents:WaitForChild("CurrentChunkRemote")
 local updateClientData = remoteEvents:WaitForChild("UpdateClientData")
@@ -26,11 +28,13 @@ local coinsBuyChunk = remoteEvents:WaitForChild("CoinsBuyChunk")
 local destroySkeleton = remoteEvents:WaitForChild("DestroySkeleton")
 local attackObject = remoteEvents:WaitForChild("AttackObject")
 
+-- Module Scripts
 local playerData = require(ReplicatedStorage:WaitForChild("PlayerData"))
 local moduleData = require(ReplicatedStorage:WaitForChild("ModuleData"))
 local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 local CF = require(StarterPlayer.StarterPlayerScripts:WaitForChild("ClientFunctions"))
 
+-- Destroys the skeleton that displays when mouse hovers over buy gui when remote is fired by server
 destroySkeleton.OnClientEvent:Connect(function(fullCoord)
 	local skeleton = buyUIFolder:FindFirstChild(fullCoord)
 	if skeleton then
@@ -39,6 +43,7 @@ destroySkeleton.OnClientEvent:Connect(function(fullCoord)
 end)
 
 
+-- Updates the data on the player that the server gives
 updateClientData.OnClientEvent:Connect(function(tableType, data)
 	playerData[tableType][userId] = data
 	if tableType == "OwnedChunks" then
@@ -47,30 +52,35 @@ updateClientData.OnClientEvent:Connect(function(tableType, data)
 end)
 
 
-
+-- Destroys the ui of buy chunk, server fires this when purchase successful
 currentChunkRemote.OnClientEvent:Connect(function(coordinateString)
 	playerGui:WaitForChild("BuyChunkGuiStorage"):FindFirstChild(coordinateString):Destroy()
 end)
 
 
+-- Checks the 3d location of the mouse on where the mouse clicked, then gets the target hit
+-- Checks if its a breakable object and makes a HPBar if it doesnt already exist and if the server returns continue
+-- (meaning that hp is not =< 0 then we continue attacking)
+
 mouse.Button1Down:Connect(function()
-	local target = mouse.Target
+	local target = mouse.Target -- gets the Object in 3d space mouse hit
 	local model = RF.checkBreakableHierarchy(target)
 	if model then
-		local state = attackObject:InvokeServer(model)
+		local state = attackObject:InvokeServer(model) -- Gets validation from server tto see if hp <= 0
 		soundsFolder:WaitForChild("Hit"):Play()
 		if state == "continue" then
 			local HP = model:WaitForChild("HP").Value
 			local currentHP = model:WaitForChild("CurrentHP").Value
 
-			local HPBar
+			-- Checks if a HPBar already exists
+			local HPBar 
 			for i,v in HPGuiStorage:GetChildren() do
 				if v.Adornee == model.PrimaryPart then
 					HPBar = v
 				end
 			end
 
-
+			-- If HPBar doesnt exist for that chunk yet then it creates one
 			if HPBar == nil then
 				HPBar = HPBillboard:Clone()
 				HPBar.Parent = HPGuiStorage
@@ -81,26 +91,28 @@ mouse.Button1Down:Connect(function()
 			local redBar = HPBar:WaitForChild("RedBar")
 			local greenBar = redBar:WaitForChild("GreenBar")
 			local priceText = redBar:WaitForChild("PriceText")
-
+			
+			-- Updates the size of the ui depending on % ratio of currentHP/ HP
 			if currentHP/HP >= 0 then
 				priceText.Text = currentHP
 				greenBar.Size = UDim2.new(currentHP/HP, 0, 1, 0)
 			end
 
-
+			-- Basically clones a part from replicated storage that holds the particle effect when clicking an object
+			-- Then moves that object to the hitposition and plays the particle effectt
 			local hitPos = mouse.Hit.Position
 			local tapPart = ReplicatedStorage:WaitForChild("TapPart"):Clone()
-			tapPart.Parent = workspace
-
 			local particle = tapPart:WaitForChild("Attachment"):WaitForChild("ParticleEmitter")
+			tapPart.Parent = workspace
 			tapPart.Position = hitPos
 			particle:Emit(1)
 			
+			-- Destroys part later so particle would be finished playing before deletion
 			task.delay(3, function()
 				tapPart:Destroy()
 			end)
 		else
-			print("ok")
+			-- Destroys all the current gui objects
 			for i,v in HPGuiStorage:GetChildren() do
 				v:Destroy()
 			end

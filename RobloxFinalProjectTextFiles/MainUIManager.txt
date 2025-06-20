@@ -1,82 +1,129 @@
+
+-- Services
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
+local TweenService = game:GetService("TweenService")
 
+-- Random objects
 local localPlayer = Players.LocalPlayer
-local leaderstats = localPlayer:FindFirstChild("leaderstats")
-local coins = leaderstats:FindFirstChild("Coins")
+local leaderstats = localPlayer:WaitForChild("leaderstats")
+local coins = leaderstats:WaitForChild("Coins")
 local playerGui = localPlayer:WaitForChild("PlayerGui")
 local screenGui = playerGui:WaitForChild("ScreenGui")
 local starterPlayerScripts = StarterPlayer:WaitForChild("StarterPlayerScripts")
+local soundEffects = ReplicatedStorage:WaitForChild("SoundEffects")
+local clickSound = soundEffects:WaitForChild("Click")
+local moneySound = soundEffects:WaitForChild("Money")
 
+-- Remote Events
 local remoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
 local teleportHome = remoteEvents:WaitForChild("TeleportHome")
 local coinsBuyChunk = remoteEvents:WaitForChild("CoinsBuyChunk")
+local sellItem = remoteEvents:WaitForChild("SellItem")
 
+-- UI Frames
 local buyChunkFrame = screenGui:WaitForChild("BuyChunkFrame")
 local homeButton = screenGui:WaitForChild("HomeButton")
 local restartButton = screenGui:WaitForChild("RestartButton")
 local sellButton = 	screenGui:WaitForChild("SellButton")
 local coinFrame = screenGui:WaitForChild("CoinFrame")
 
+-- Buttons
 local homeImageButton = homeButton:WaitForChild("ImageButton")
+local sellTextButton = sellButton:WaitForChild("TextButton")
 local xButton = buyChunkFrame:WaitForChild("XButton")
 local buyButtonFrame = buyChunkFrame:WaitForChild("BuyButtonFrame")
 local buyButton = buyButtonFrame:WaitForChild("BuyButton")
 
-
+-- Module scripts
 local RF = require(ReplicatedStorage:WaitForChild("ReplicatedFunctions"))
 local CF = require(starterPlayerScripts:WaitForChild("ClientFunctions"))
 
-
+-- Changes the value of the coin when script is ran and when the value is changed it updates
+coinFrame:WaitForChild("TextButton").Text = "$ "..RF.addCommas(coins.Value)
 coins.Changed:Connect(function()
 	coinFrame:WaitForChild("TextButton").Text = "$ "..RF.addCommas(coins.Value)
 end)
 
---Make it so it displays a dark cover over UI when mouse is hovering
-
+-- When client clicks the home button on top it fires a remote event to tp player to home
 homeImageButton.MouseButton1Click:Connect(function()
+	clickSound:Play()
 	teleportHome:FireServer()
 end)
 
+
 local tableOfButtons = {
-	sellButton:WaitForChild("TextButton"),
+	sellTextButton,
 	homeImageButton,
 	restartButton:WaitForChild("ImageButton")
 }
 
+-- When mouse hovers/leaves over an ui object in tableOfButtons it makes it darker to create a cool hover effect
 for i, v in tableOfButtons do
 	v.MouseEnter:Connect(function()
-		v.Parent:WaitForChild("ShadowFrame").Visible = true
+		v.Parent.BackgroundTransparency = 0.8
 	end)
-
+	
 	v.MouseLeave:Connect(function()
-		v.Parent:WaitForChild("ShadowFrame").Visible = false
+		v.Parent.BackgroundTransparency = 1
 	end)
 end
 
+-- Makes X button darker/lighter based on mouse leave/enter and makes the main buy ui disappear out of screen once clicked
 xButton.MouseEnter:Connect(function()
 	xButton.ImageColor3 = Color3.fromRGB(195,195,195)
 end)
-
 xButton.MouseLeave:Connect(function()
 	xButton.ImageColor3 = Color3.fromRGB(255,255,255)
 end)
-
 xButton.MouseButton1Click:Connect(function()
+	clickSound:Play()
 	CF.tweenUIPos(buyChunkFrame, {0.5, 0}, {1.5, 0})
 end)
 
+-- Makes buybuttton darker/lighter based on mouse leave/enter and fires remote event to server to buy a cchunk once cclicked
 buyButton.MouseEnter:Connect(function()
-	buyButtonFrame.BackgroundTransparency = 0.5
+	buyButtonFrame.BackgroundTransparency = 0.8
 end)
-
 buyButton.MouseLeave:Connect(function()
-	buyButtonFrame.BackgroundTransparency = 0.65
+	buyButtonFrame.BackgroundTransparency = 1
 end)
-
 buyButton.MouseButton1Click:Connect(function()
+	moneySound:Play()
 	coinsBuyChunk:FireServer(buyChunkFrame:WaitForChild("Coordinate").Value)
 	CF.tweenUIPos(buyChunkFrame, {0.5, 0}, {1.5, 0})
+end)
+
+
+-- Fires remote event to sell the object the players holding once clicked
+sellTextButton.MouseButton1Down:Connect(function()
+	sellItem:FireServer()
+end)
+
+-- Once successfully sold the item it plays sound and adds a + coin added effect on the screen that tweens upwards and disappears
+sellItem.OnClientEvent:Connect(function(amount)
+	moneySound:Play()
+	local addedCoins = playerGui:WaitForChild("AddedCoins"):Clone()
+	local textLabel = addedCoins:WaitForChild("TextLabel")
+	textLabel.Text = "+ $"..RF.addCommas(amount)
+	local x = RF.getRandomFloat(0.15, 0.85)
+	local y = RF.getRandomFloat(0.15, 0.85)
+	addedCoins.Position = UDim2.new(x, 0, y, 0)
+	addedCoins.Parent = screenGui
+
+	-- Tween  stuff
+	local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
+	local goal = {Position = UDim2.new(x, 0, y - 0.1, 0)}
+	local tween = TweenService:Create(addedCoins, tweenInfo, goal)
+	tween:Play()
+	tween.Completed:Connect(function()
+		addedCoins:Destroy()
+	end)
+	
+	local goal2 = {TextTransparency = 1} -- Tweening transparency of text
+	TweenService:Create(textLabel, tweenInfo, goal2):Play()
+	local goal3 = {Transparency = 1} -- Tweening transparency of stroke
+	TweenService:Create(textLabel:WaitForChild("UIStroke"), tweenInfo, goal3):Play()
 end)

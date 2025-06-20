@@ -1,18 +1,20 @@
+-- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local TweenService = game:GetService("TweenService")
 
 local moduleData = require(ReplicatedStorage.ModuleData)
-
 local priceCache = moduleData.PriceCache
 
 local module = {}
 
+-- Gets a random decimal number from a given range
 function module.getRandomFloat(min, max)
 	return min + (math.random() * (max - min))
 end
 
+-- Checks if the parent or 2nd parent is a breakable part
 function module.checkBreakableHierarchy(part)
 	if part then
 		if CollectionService:HasTag(part.Parent, "BreakableModel") then
@@ -26,27 +28,32 @@ function module.checkBreakableHierarchy(part)
 end
 
 
+-- Shakes the model in a random direction
 function module.shakeModel(model)
-	local originalCFrame = model:GetPivot()
+	-- Saves the original scale and adds a red highlight for damage visual
 	local scale = model:GetAttribute("Scale")
 	local redHightlight = ReplicatedStorage:WaitForChild("RedHighlight"):Clone()
-	
-
 	redHightlight.Parent = model
+	
+	-- Scales a little bigger then back to a little smaller
 	model:ScaleTo(scale * 1.05)
-	task.wait(0.1)
-	model:ScaleTo(scale)
-	redHightlight:Destroy()
+	task.delay(0.1, function()
+		model:ScaleTo(scale)
+		redHightlight:Destroy()
+	end)
 end
 
-function module.addCommas(num)
-	local str = tostring(num)
+-- Takes a number and adds commas every 3 digits
+function module.addCommas(number)
+	local str = tostring(number)
 	local result = ""
 	local count = 0
 
 	for i = #str, 1, -1 do
 		result = str:sub(i,i) .. result
 		count = count + 1
+
+		-- Add comma after every 3 digits, except at the start
 		if count == 3 and i > 1 then
 			result = "," .. result
 			count = 0
@@ -56,14 +63,7 @@ function module.addCommas(num)
 	return result
 end
 
-
-function module.breakModel(model)
-
-end
-
-
-
-
+-- Changes the coordinate system based on what plot the player is on (because there is 4 plots)
 function module.coordinateScale(increment, plotNumber, coords)
 	local x, z
 	if plotNumber == 1 then		
@@ -82,7 +82,7 @@ function module.coordinateScale(increment, plotNumber, coords)
 	return x, z
 end
 
-
+-- Saves the prices so the computer doesnt have to calculate the price everytime for buying plots
 function module.priceCacher(buyPlotNumber)
 	local price
 	if priceCache[buyPlotNumber] then
@@ -94,11 +94,15 @@ function module.priceCacher(buyPlotNumber)
 	end
 end
 
+
+-- Gets the buy chunk coordinates from the currently owned coordinates
 function module.getBuyCoordinates(coordinatesTable)
 	local buyCoordinates = {}
 	for i,v in coordinatesTable do
 		local downOffset = 1
 		local leftOffset = 1
+		
+		-- Stops player from expanding in all directions and going to other plots
 		if v[1] == 1 then
 			downOffset = 0 
 		end
@@ -106,6 +110,7 @@ function module.getBuyCoordinates(coordinatesTable)
 			leftOffset = 0
 		end
 
+		-- Offsets cords in the 4 directions
 		local offsetCoords = 
 			{
 				{v[1] + 1, v[2]},
@@ -114,6 +119,7 @@ function module.getBuyCoordinates(coordinatesTable)
 				{v[1], v[2] - leftOffset}
 			}
 
+		-- Compares all the offsetCoords and validates it with checkCoordinates function
 		for i,v in offsetCoords do
 			if module.checkCoordinates(v, coordinatesTable, buyCoordinates) then
 				table.insert(buyCoordinates, v)
@@ -123,7 +129,8 @@ function module.getBuyCoordinates(coordinatesTable)
 	return buyCoordinates
 end
 
-
+-- Checks if the coordinate is already in the table
+-- Also checks if the coordinate is an already existing chunk
 function module.checkCoordinates(coord, coordinatesTable, buyCoordinates)
 	for i,v in coordinatesTable do
 		if coord[1] == v[1] and coord[2] == v[2] then
@@ -138,7 +145,7 @@ function module.checkCoordinates(coord, coordinatesTable, buyCoordinates)
 	return true
 end
 
-
+-- Replaces underscores with spaces
 function module.ReplaceUnderscoresWithSpaces(input)
 	return string.gsub(input, "_", " ")
 end

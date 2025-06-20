@@ -1,3 +1,4 @@
+-- Services
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local CollectionService = game:GetService("CollectionService")
 local ServerStorage = game:GetService("ServerStorage")
@@ -8,15 +9,18 @@ local Players = game:GetService("Players")
 local StarterGui = game:GetService("StarterGui")
 local Lighting = game:GetService("Lighting")
 
+-- Module Scripts
 local moduleData = require(ReplicatedStorage.ModuleData)
 local RF = require(ReplicatedStorage.ReplicatedFunctions)
 local playerData = require(ReplicatedStorage.PlayerData)
 
+-- Remote Events
 local remoteEvents = game.ReplicatedStorage.RemoteEvents
 local updateClientData = remoteEvents.UpdateClientData
 local currentChunkRemote = remoteEvents.CurrentChunkRemote
 local destroySkeleton = remoteEvents.DestroySkeleton
 
+-- Random Things
 local chunkSizes = playerData["ChunkSizes"]
 local buyPlotProducts = moduleData.BuyPlotProducts
 local particleFolder = ReplicatedStorage.Particles
@@ -35,26 +39,25 @@ local weatherChance = moduleData.weatherChance
 
 
 
-
-
 local module = {}
 
 
-
+-- A rarity function that returns an umber from 1-10 with a very rare chance for it to be close to 10
 function module.getExponentialScale(rarity)
 	local u = math.random()
 	return 1 + 10 * (1 - u^rarity)
 end
 
 
-
+-- Takes a part and takes it color and offsets by a random amount in the given range
 function module.colorOffsetPart(part, bottomOffset, topOffset)
 	local colorOffset = math.random(bottomOffset, topOffset)
 	part.Color = Color3.fromRGB(math.clamp(part.Color.R*255 + colorOffset, 0 , 255), math.clamp(part.Color.G*255 + colorOffset, 0 , 255), math.clamp(part.Color.B*255 + colorOffset, 0 , 255))
 end
 
 
-
+-- Creates a new stud/block. With parameters to offset its color and position from original part
+-- Used in trees, bushes, rocks etc
 function module.studMaker(part, model, positionVector, sizeVector, bottomColorOffset, topColorOffset)
 	local stud = part:Clone()
 	stud.Parent = model
@@ -65,7 +68,11 @@ function module.studMaker(part, model, positionVector, sizeVector, bottomColorOf
 end
 
 
-
+-- Recursively finds the list position of a number where the position would be if
+-- You subtract that number to all the numbers in the list till that number isnt bigger than current number(hard to explain)
+-- like for example  a list of numbers = [1, 4, 6] and given number 3
+-- The position with would be 2 because u minus 3-1 and u have 2 left stud but 2 is not bigger than 4
+-- Used for rarity system for bushes/ores
 function module.findListPos(number, pos, list)
 	if number <= list[pos] then 
 		return 1
@@ -75,7 +82,7 @@ function module.findListPos(number, pos, list)
 end
 
 
-
+-- Just makes a basic model for any breakable model
 function module.makePartModel(plotFolder, name)
 	local model = Instance.new("Model")
 	model.Parent = plotFolder.MainParts
@@ -85,7 +92,7 @@ function module.makePartModel(plotFolder, name)
 end
 
 
-
+-- Makes the trunk from the given biome type
 function module.makeTrunk(model, biome)
 	local trunk = biomesFolder[biome].Wood:Clone()
 	local thicknessSize = RF.getRandomFloat(2.2, 3)
@@ -96,18 +103,20 @@ function module.makeTrunk(model, biome)
 end
 
 
-
-function module.makeBlockSpecs(part, lowerAmount, upperAmount, model, speckType, speckVariation)
+-- Takes a part and draws specks around it
+-- Used for berry bushes and ores
+function module.makeBlockSpecs(part, model, speckType, speckVariation)
 	local xSize = part.Size.X
 	local ySize = part.Size.Y
 	local zSize = part.Size.Z
 
-
+	-- Loops through the axises/sides
 	for side = 0, 1 do 
 		for axis = 1, 3 do
 			for amount = 1, math.random(1,2) do
 				local posX, posY, posZ
-
+				
+				-- Sets the random position variables
 				if axis == 1 then
 					posX = side == 0 and -9*xSize/20 or 9*xSize/20
 					posY = -ySize/3 + math.random() * 2*ySize/3
@@ -122,6 +131,7 @@ function module.makeBlockSpecs(part, lowerAmount, upperAmount, model, speckType,
 					posZ = side == 0 and -9*zSize/20 or 9*zSize/20
 				end
 
+				-- Clones the berry/ore type and sets their position and parent
 				local speck
 				if speckType == "Ores" then
 					speck = ReplicatedStorage[speckType][speckVariation.."_Ore"]:Clone()
@@ -129,7 +139,6 @@ function module.makeBlockSpecs(part, lowerAmount, upperAmount, model, speckType,
 				elseif speckType == "Berries" then
 					speck = ReplicatedStorage[speckType][speckVariation.."_Berry"]:Clone()
 				end
-
 				speck.Parent = model
 				speck.Position = Vector3.new(part.Position.X + posX, part.Position.Y + posY, part.Position.Z + posZ)
 			end
@@ -138,25 +147,30 @@ function module.makeBlockSpecs(part, lowerAmount, upperAmount, model, speckType,
 end
 
 
-
+-- Draws branches when given a trunk
+-- Used for cactus and trees
 function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeType, stemLengthMultiplier, branchChance, bottomYLimit)
 	local upperStemTable = {}
+
 	for i = 1,4 do
-		if math.random(1, branchChance) == 1 then
+		if math.random(1, branchChance) == 1 then -- Sets a chance for branch to occur using branchChance parameter
 			local startingYPos = trunk.Position.Y + RF.getRandomFloat(bottomYLimit, trunk.Size.Y/4)
 
+			-- lower and upper stems
 			local stem = stemReferencePart:Clone()
-			stem.Parent = trunk
-
 			local upperStem = stemReferencePart:Clone()
+			stem.Parent = trunk
 			upperStem.Parent = trunk
-
+			
+			-- Sets some of the properties of the stems
 			local stemThickness = trunkThickness - 2*trunkThickness/5
 			local stemLength = trunkThickness * RF.getRandomFloat(1.4, 1.7) * stemLengthMultiplier
 			upperStem.Size = Vector3.new(stemThickness, stemLength * RF.getRandomFloat(0.5, 0.8), stemThickness)
 
 
-
+			-- Basically gets the side and makes a stem extend outwards in that direction
+			-- Then gets another stem but its vertical and is on the tip of the first
+			-- Stem then offsetted by a little
 			if i == 1 then
 				stem.Size = Vector3.new(stemThickness, stemThickness, stemLength)
 				local upperStemOffset = stem.Size.Z/2 - upperStem.Size.Z/2
@@ -185,7 +199,10 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 
 			table.insert(upperStemTable, upperStem)
 
+			-- If the tree type is cactus then it updates the cactus borders because the cactus
+			-- Has like a border thing that needs to be adjusted for the new size
 			if treeType == "Cactus" then
+				print(module)
 				module.updateCactusBorders(stem, .3)
 				module.updateCactusBorders(upperStem, .3)
 			end
@@ -194,13 +211,18 @@ function module.make4SideBranch(trunk, stemReferencePart, trunkThickness, treeTy
 	return upperStemTable
 end
 
+-- Takes the borders of the cactus and adjusts it the the new size of the main part of the cactus
+function module.updateCactusBorders(cactusPart, offset)
+	cactusPart.bordersidey.Size = Vector3.new(cactusPart.Size.X - offset, cactusPart.Size.Y + offset, cactusPart.Size.Z - offset)
+	cactusPart.bordersidex.Size = Vector3.new(cactusPart.Size.X + offset, cactusPart.Size.Y - offset, cactusPart.Size.Z - offset)
+	cactusPart.bordersidez.Size = Vector3.new(cactusPart.Size.X - offset, cactusPart.Size.Y - offset, cactusPart.Size.Z + offset)
+end
 
-
+-- Function to tween the lighting properties that are tweenable
 function module.tweenLighting(weatherEnvironment, tweenInfo)
 	for i,v in environments[weatherEnvironment]:GetChildren() do
 		local object = Lighting[v.Name]
 		for x,y in moduleData.tweenableProperties[v.Name] do
-
 			local goal = {[y] = v[y]}
 			local tween = TweenService:Create(object, tweenInfo, goal)
 			tween:Play()
@@ -208,6 +230,7 @@ function module.tweenLighting(weatherEnvironment, tweenInfo)
 	end
 end
 
+-- Function to set the lighting properties that are not tweenable
 function module.changeLighting(weatherEnvironment)
 	for i,v in environments[weatherEnvironment]:GetChildren() do
 		local object = Lighting[v.Name]
@@ -218,11 +241,13 @@ function module.changeLighting(weatherEnvironment)
 end
 
 
-
+-- Function to run the blood moon event
 function module.makeBloodMoon(duration)
 	local environments = Lighting.Environments
 	Lighting.Sky.MoonTextureId = environments.BloodMoonEnvironment.Sky.MoonTextureId
 	
+	-- This chunk of code makes it so it creates a part around every player where a particle effect is placed on
+	-- that part and creates a firefly effect
 	local deleteObjects = {}
 	for i,v in Players:GetPlayers() do
 		local character = v.Character
@@ -231,35 +256,45 @@ function module.makeBloodMoon(duration)
 			local weldConstraint = Instance.new("WeldConstraint", character)
 			local humanoidRootPart = character.HumanoidRootPart
 
-			table.insert(deleteObjects, fireFliesPart)
+			-- Saves to delete later when event is over
+			table.insert(deleteObjects, fireFliesPart) 
 			table.insert(deleteObjects, weldConstraint)
 			
 			fireFliesPart.Anchored = false
 			fireFliesPart.Position = humanoidRootPart.Position
 			fireFliesPart.Parent = character
-			
+				
+			-- Weld the parts together 
 			weldConstraint.Part0 = humanoidRootPart
 			weldConstraint.Part1 = fireFliesPart
 		end
 	end
 	
+	-- Tweens the moon position
 	local tweenInfo = TweenInfo.new(6, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
 	local moonGoal = {ClockTime = 0}
 	local moonTween = TweenService:Create(Lighting, tweenInfo, moonGoal)
-	
 	moonTween:Play()
+	
+	-- Tweenns the other lighting properties
 	module.tweenLighting("BloodMoonEnvironment", tweenInfo)
 	
+
 	moonTween.Completed:Connect(function()
+		-- When the moon tweeen is completed it hard sets all the other properties that are non tweenable
 		Lighting.Brightness = 10
 		module.changeLighting("BloodMoonEnvironment")
 
+		-- This runs after delay duration is over and basically reverses everything that happened and brings
+		-- happened and brings it to normal (NormalEnnvironmeent)
 		task.delay(duration, function()
 			local moonGoal2 = {ClockTime = 12}
 			local moonTween2 = TweenService:Create(Lighting, tweenInfo, moonGoal2)
 			moonTween2:Play()
 			module.tweenLighting("NormalEnvironment", tweenInfo)
 
+			-- When moon tweens back to day time, deletes all the firefliespart and weld parts, and changes
+			-- the non-tweenable properties of lighting to normal
 			moonTween2.Completed:Connect(function()
 				for i,v in deleteObjects do
 					v:Destroy()
@@ -273,20 +308,24 @@ function module.makeBloodMoon(duration)
 	end)
 end
 
+-- Function to run the Silver Night event
 function module.makeSilverNight(duration)
 	local environments = Lighting.Environments
 
+	-- Tweens the moo nto make it night
 	local tweenInfo = TweenInfo.new(6, Enum.EasingStyle.Linear, Enum.EasingDirection.In)
 	local moonGoal = {ClockTime = 0}
 	local moonTween = TweenService:Create(Lighting, tweenInfo, moonGoal)
-
 	moonTween:Play()
+	
+	-- Tweens the lighting properties to silver night
 	module.tweenLighting("SilverNightEnvironment", tweenInfo)
 
 	moonTween.Completed:Connect(function()
 		Lighting.Brightness = 10
 		module.changeLighting("SilverNightEnvironment")
 
+		-- Turns everythinnng back to normal when duration is over
 		task.delay(duration, function()
 			local moonGoal2 = {ClockTime = 12}
 			local moonTween2 = TweenService:Create(Lighting, tweenInfo, moonGoal2)
@@ -304,7 +343,7 @@ function module.makeSilverNight(duration)
 end
 
 
-
+-- Checks if the object has a mutation
 function module.checkMutations(model)
 	for i,v in CollectionService:GetTags(model) do
 		if moduleData.BiomePriceMultiplier[v] ~= nil then
@@ -315,18 +354,19 @@ function module.checkMutations(model)
 end
 
 
-
+-- Runs a 1/256 chance to make the part golden
 function module.runGoldenChance(model)
-	if math.random(1,256) == 1 and module.checkMutations(model) then
+	if math.random(1,256) == 1 and module.checkMutations(model) then -- Checks if other mutations exist & 1/256 chance
 		CollectionService:AddTag(model, "Golden")
 		for i,v in model:GetDescendants() do
+			-- Turns the color property of every part goldenn
 			if v:IsA("Part") then
 				v.Color = Color3.fromRGB(255, 215, 0)
 				module.colorOffsetPart(v, -25, 25)
 			end
 			
+			-- Adds golden particles
 			local goldenParticle = particleFolder.GoldenParticles:Clone()
-
 			if v == model.PrimaryPart then
 				goldenParticle.Rate = 18
 			end
@@ -335,14 +375,14 @@ function module.runGoldenChance(model)
 end
 
 
-
+-- Runs a 1/1024 chance to make the part rainbow
 function module.runRainbowChance(model, plotFolder)
 	if math.random(1,1024) == 1 and module.checkMutations(model) then
 		CollectionService:AddTag(model, "Rainbow")
 		model.Parent = plotFolder.RainbowParts
 
+		-- Adds rainbow particles
 		for i,v in model:GetDescendants() do
-			
 			local rainbowParticle = particleFolder.RainbowParticles:Clone()
 			rainbowParticle.Parent = v
 			if v == model.PrimaryPart then
@@ -353,22 +393,21 @@ function module.runRainbowChance(model, plotFolder)
 end
 
 
-
+-- Runs a 1/16 chance to make it blood red
 function module.runBloodRedChance(model)
-	print(weatherBooleans.Blood_Moon.Value)
-	if weatherBooleans.Blood_Moon.Value and math.random(1,8) == 1 then
+	if weatherBooleans.Blood_Moon.Value and math.random(1,16) == 1 then
 		CollectionService:AddTag(model, "Blood_Red")
 		
-		print("ran")
 		for i,v in model:GetDescendants() do
-			local bloodRedParticle = particleFolder.BloodRedParticles:Clone()
-
+			-- Offsets the color of part
 			if v:IsA("Part") then
 				v.Color = Color3.fromRGB(135, 0, 0)
 				module.colorOffsetPart(v, -25, 25)
 			end
+
+			-- Adds particles
+			local bloodRedParticle = particleFolder.BloodRedParticles:Clone()
 			bloodRedParticle.Parent = v
-			
 			if v == model.PrimaryPart then
 				bloodRedParticle.Rate *= 1.5
 			end
@@ -377,18 +416,15 @@ function module.runBloodRedChance(model)
 end
 
 
-
+-- Runs a 1/16 chance to make it silver surge
 function module.runSilverSurgeChance(model)
-	if weatherBooleans.Silver_Night.Value and math.random(1,12) == 1 then
+	if weatherBooleans.Silver_Night.Value and math.random(1,16) == 1 then
 		CollectionService:AddTag(model, "Silver_Surge")
 
 		for i,v in model:GetDescendants() do
-
-
+			-- Makes it neon white/greyish
 			if v:IsA("Part") then
-
 				v.Color = Color3.fromRGB(110, 110, 110)
-
 				v.Material = Enum.Material.Neon	
 				module.colorOffsetPart(v, -25, 25)
 			end
@@ -398,45 +434,21 @@ function module.runSilverSurgeChance(model)
 end
 
 
-
+-- Takes the model and finalizes it's position by picking a random point on the passed in grass
 function module.finalizePosition(model, grass, scaleFactor, yOffset, rotationMultiplier)
 	local scale = module.getExponentialScale(scaleFactor)
 	model:PivotTo(CFrame.new(Vector3.new(grass.Position.X + RF.getRandomFloat(-grass.Size.X*0.4, grass.Size.X*0.4), grass.Position.Y + yOffset*scale , grass.Position.Z + RF.getRandomFloat(-grass.Size.Z*0.4, grass.Size.Z*0.4))))
 	model:ScaleTo(scale)
 	model:SetAttribute("Scale", scale)
-
-	for i, v in model.PrimaryPart:GetTouchingParts() do
-		if v ~= model.Parent and v.Parent.Name == "MainParts" then
-			local offset = math.sqrt(v:GetAttribute("yValue") - model.Parent:GetAttribute("yValue"))
-			local pivot = model:GetPivot()
-			local newPivot
-
-			if rotationMultiplier then
-				newPivot = pivot * CFrame.new(0, offset, 0) * CFrame.Angles(0, math.rad(90 * rotationMultiplier), 0)
-			else
-				newPivot = pivot * CFrame.new(0, offset, 0)
-			end
-			model:PivotTo(newPivot)
-		end
-	end
-
 end
 
 
 
-function module.checkBreakableHierarchy(part)
-	if CollectionService:HasTag(part.Parent, "BreakablePart") or CollectionService:HasTag(part.Parent.Parent, "BreakablePart") then
-		return true
-	else
-		return false
-	end
-end
-
-
-
+-- Makes a Savannah leaf on top of the tree with the top position given
 function module.makeSavanahLeaf(model, biome, position)
-	
 	local referenceLeaf = biomesFolder[biome].TreeLeaf
+	
+	-- First leaf (bottom one and is a little bit bigger)
 	local mainLeaf = referenceLeaf:Clone()
 	local mainLeafSize = RF.getRandomFloat(20, 25)
 	mainLeaf.Parent = model
@@ -444,7 +456,7 @@ function module.makeSavanahLeaf(model, biome, position)
 	mainLeaf.Position = position
 	module.colorOffsetPart(mainLeaf, -25, 25)
 
-	
+	-- Second leaf (top one and is a little bit smaller)
 	local subLeaf = referenceLeaf:Clone()
 	local subLeafSize = RF.getRandomFloat(18, 22)
 	subLeaf.Parent = model
@@ -455,45 +467,42 @@ end
 
 
 
-
+-- Changes the players money by given amount
 function module.changePlayersMoney(player, amount)
 	local leaderstats = player:FindFirstChild("leaderstats")
-	print(leaderstats)
 	local money = leaderstats:FindFirstChild("Coins")
-	print(money)
 	money.Value += amount
 end
 
 
-
-
-
-
-
+-- Main function for making the map, takes in the plot number (1-4) and a table of coords then makes the map using the given coords
 function module.makeMap(plotNumber, tableOfCoords, player)
+	-- Variables
 	local userId = player.UserId
 	local heightScale = RF.getRandomFloat(.022, .026)
-	importantValues.HeightScale.Value = heightScale
+	importantValues.HeightScale.Value = heightScale -- Stores it in a intObject if needed later
 	local plotFolder = plot["Plot"..plotNumber]
 	
 
+	-- Gets a random seed for every biome and saves it to player data
 	for biomeName, chanceData in moduleData.BiomeChanceData do
 		local biomeSeed
 		local savedBiomeSeed = playerData["BiomeSeeds"][player.UserId][biomeName]
-		if savedBiomeSeed then
+		if savedBiomeSeed then -- checks if a seed already exists
 			biomeSeed = savedBiomeSeed
-		else
+		else -- if not sets it
 			biomeSeed = math.random(1,100000000)
 			playerData["BiomeSeeds"][player.UserId][biomeName] = biomeSeed
 		end
 	end
 
 
+	-- Gets a random seed for the height map and cchecks if the coordinate {1,1} is a water chunk and if it is, it gets a new seed
 	local heightSeed
 	local savedHeightSeed = playerData["HeightSeed"][player.UserId][1]
-	if savedHeightSeed then
+	if savedHeightSeed then -- checks if a seed already exists
 		heightSeed = savedHeightSeed
-	else
+	else -- if not sets it
 		heightSeed = math.random(1,100000000)
 		while module.checkHeightSeed(heightScale, heightSeed, plotNumber, {1,1}) == false do
 			heightSeed = math.random(1,100000000)
@@ -501,25 +510,27 @@ function module.makeMap(plotNumber, tableOfCoords, player)
 		playerData["HeightSeed"][player.UserId][1] = heightSeed
 	end
 
+	-- Loops through the table of coords and adds a chunk for every coord
 	for i,v in tableOfCoords do
 		module.AddChunk(v[1], v[2], plotNumber, heightSeed, heightScale, false, player)
 	end
 
-
+	-- Gets the buy chunk coordinates then sets their chunk sizes and saves it to player data
 	for i,v in RF.getBuyCoordinates(playerData["OwnedChunks"][userId]) do
 		if chunkSizes[userId][v[1]..","..v[2]] == nil then
 			module.setChunkSize(v[1], v[2], plotNumber, heightSeed, heightScale, userId)
 		end
 	end
-	updateClientData:FireClient(player, "ChunkSizes", chunkSizes[userId])
-
-
+	
+	-- Sends the data to the client
+	updateClientData:FireClient(player, "ChunkSizes", chunkSizes[userId]) 
 	local ownedChunks = playerData["OwnedChunks"][player.UserId]
 	updateClientData:FireClient(player, "OwnedChunks", ownedChunks)
 end
 
 
-
+-- Checks for if the noiselocation is at a certain threshold (smaller than -0.5)
+-- This is used to limit the biomes size and get the biome effect
 function module.checkHeightSeed(scale, seed, plotNumber, coords)
 	local x, z = RF.coordinateScale(increment, plotNumber, coords)
 
@@ -531,91 +542,103 @@ function module.checkHeightSeed(scale, seed, plotNumber, coords)
 	end
 end
 
-
+-- Adds a chunk to the given coordinates and seeds
 function module.AddChunk(coord1, coord2, plotNumber, heightSeed, heightScale, animation, player)
+	-- Variables
 	local userId = player.UserId
 	local part = chunkBlock:Clone()
 	local plotFolder = plot["Plot"..plotNumber]
 	local fullCoord = coord1..","..coord2..","..plotNumber
 	part.Name = fullCoord
 
-	
+	-- Height noise to get ySize diffferences
 	module.makeHeightNoise(coord1, coord2, heightScale, heightSeed, plotNumber, part, userId)
 
+	-- Decides the biome that chunk is gonna be by looping through every biome seed and checking the noise location of the biome seed
+	for biomeName, seed in playerData.BiomeSeeds[player.UserId] do
+		if CollectionService:HasTag(part, "Water")  then
+			-- do nothing
+		else
+			-- Gets the chance data, scaled x and z annd gets the noise location using those values
+			local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
+			local chanceData = moduleData.BiomeChanceData[biomeName]
+			local scale = biomeScale * chanceData[2]
+			local noiseLocation = math.noise((x + seed) / (increment) * scale, (z + seed) / (increment) * scale)
 
-	for i,v in playerData.BiomeSeeds[player.UserId] do
-		module.makeBiomeNoise(coord1, coord2, biomeScale, i, v, part, plotNumber)
+			-- If validated then replaces that chunk with that seed
+			if noiseLocation >= chanceData[1] then
+				module.replaceChunk(part, ReplicatedStorage.Biomes[biomeName])
+			end
+		end
 	end
 
+	-- If none of the seeds apply to the chunk then it runs check empty chcunk which basiccally turns it into default grass biome
 	module.checkEmptyChunk(part)
 
+	-- This is for if animation should play (when player joins no annimation will be playing but when player buys animationn should play)
 	if animation then
 		part.Parent = workspace.TempStorage
 		table.insert(playerData["OwnedChunks"][userId], {coord1, coord2})
-		for i,v in RF.getBuyCoordinates(playerData["OwnedChunks"][userId]) do
+		-- Updates the buy coordinates size info and saves in player data
+		for i,v in RF.getBuyCoordinates(playerData["OwnedChunks"][userId]) do 
 			if chunkSizes[userId][v[1]..","..v[2]] == nil then
 				module.setChunkSize(v[1], v[2], plotNumber, heightSeed, heightScale, userId)
 			end
 		end
+		-- Sends updated data to client and destroys the skeleton part because its not a buy chunk anymore
 		updateClientData:FireClient(player, "OwnedChunks", playerData["OwnedChunks"][userId])
 		updateClientData:FireClient(player, "ChunkSizes", chunkSizes[userId])
 		destroySkeleton:FireClient(player, fullCoord)
 		
 
 		local top = part:FindFirstChild("Grass") or part:FindFirstChild("WaterBlock")
-
 		local tweenParts = {top, part}
 		local tweenInfo = TweenInfo.new(2, Enum.EasingStyle.Cubic, Enum.EasingDirection.Out, 0, false, 0)
 
+		-- Tweens the grass and the dirt 
 		for i,v in ipairs(tweenParts) do
+			-- Puts the chunk at the bottom first then tweens it. Makes it start at 1 transparenccy too (invisible)
 			local originalPosition = v.Position
-			v.Position = originalPosition + Vector3.new(0, -20, 0)
-			v.Transparency = 1
 			local goal = {Transparency = 0, Position = originalPosition}
 			local tween = TweenService:Create(v, tweenInfo, goal)
-
-			tween:Play()
-			
-			if i == 2 then
-
-				local connection
-				connection = tween.Completed:Connect(function()
-					part.Parent = plotFolder.ChunkFolder
-					connection:Disconnect()
-					connection = nil
-				end)
-			end
+			v.Position = originalPosition + Vector3.new(0, -20, 0)
+			v.Transparency = 1
+			tween:Play() 
+			part.Parent = plotFolder.ChunkFolder
 		end
 	end
 end
 
 
-
+-- Height noise function for the ySize of the chunk and picking which chunks are water
 function module.makeHeightNoise(coord1, coord2, scale, seed, plotNumber, part, userId)
+	-- Variables
 	local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
 	local plotFolder = plot["Plot"..plotNumber]
 	local noiseValue = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)
 	local normalized = noiseValue + 1           
 	local y = normalized * 100
 	local yMainPartLocation = y/2
-	part:SetAttribute("yValue", y)
+	part:SetAttribute("yValue", y) -- Saves y value as an atrribute of the obejct for later use
 
-	local xSize, ySize, zSize, noiseValue = module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
+	local xSize, ySize, zSize, noiseValue = module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId) -- Gets the sizes
 
-	
+	-- Applies the sizes annd position
 	part.Size = Vector3.new(xSize, y, zSize)
 	part.Anchored = true
 	part.Position = Vector3.new(x, yMainPartLocation, z)
 	part.Parent = plotFolder.ChunkFolder
 
+	-- If statement that if noise value < -.4 then basically make it a water chunk
 	if noiseValue < -0.4 then
 		CollectionService:AddTag(part, "Water")
 
+		-- Changes the chunk to sand (because under water is sand)
 		part.Material = Enum.Material.Sand
 		part.Color = Color3.fromRGB(199, 159, 119)
-
 		module.colorOffsetPart(part, -15, 15)
 
+		-- Creates a water block on top of the sand
 		local waterBlock = ServerStorage.WaterBlock:Clone()
 		waterBlock.Parent = part
 		local ySize = 60 - (yMainPartLocation + part.Size.Y/2)
@@ -628,146 +651,105 @@ end
 
 
 
-function module.makeBiomeNoise(coord1, coord2, scale, biomeName, seed, part, plotNumber)
-	if CollectionService:HasTag(part, "Water")  then
-		return
-	end
-	
-	local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
-		
-	local chanceData = moduleData.BiomeChanceData[biomeName]
-	scale *= chanceData[2]
-	local noiseLocation = math.noise((x + seed) / (increment) * scale, (z + seed) / (increment) * scale)
-
-	if noiseLocation >= chanceData[1] then
-		module.replaceBlock(part, ReplicatedStorage.Biomes[biomeName])
-	end
-end
-
-
-
-function module.replaceBlock(part, GrassType)
+-- Takes a chunk and changes the biome of that chunk
+function module.replaceChunk(part, BiomeType) -- Passes in the biome folder type from ReplicatedStorage.Biomes
 	for i,v in part:GetChildren() do
 		v:Destroy()
 	end
 
-	for i,v in moduleData.GrassTypes do
+	for i,v in moduleData.GrassTypes do -- Removes all the biome/grass types it has 
 		if part:HasTag(v) then
 			CollectionService:RemoveTag(part, v)
 		end
 	end
 
-	CollectionService:AddTag(part, GrassType.Name)
+	CollectionService:AddTag(part, BiomeType.Name) -- Adds the new biome tag
 
+	-- Adds variation to colors and sets material and color of dirt
+	part.Color = BiomeType.Dirt.Color
+	module.colorOffsetPart(part, -12, 12)
+	part.Material = BiomeType.Dirt.Material
 
-	local offsetColor1 = math.random(-10,10)/255
-	local red = math.clamp(GrassType.Dirt.Color.R + offsetColor1, 0, 1)
-	local green = GrassType.Dirt.Color.G
-	local blue = math.clamp(GrassType.Dirt.Color.B + offsetColor1, 0, 1)
-	part.Color = Color3.new(red, green, blue)
-	part.Material = GrassType.Dirt.Material
-
-	local GrassClone = GrassType.Grass:Clone()
+	-- Adds variation to colors and sets material of grass and sets position of the grass tto be on top of dirt 
+	local GrassClone = BiomeType.Grass:Clone()
 	GrassClone.Parent = part
 	GrassClone.Size = Vector3.new(part.Size.X, 1, part.Size.Z)
 	GrassClone.Position = Vector3.new(part.Position.X, part.Position.Y + part.Size.Y/2 + RF.getRandomFloat(0.45,0.5), part.Position.Z)
-
-
-	local offsetColor2 = math.random(-15,15)/255
-
-	local red = math.clamp(GrassClone.Color.R + offsetColor2, 0, 1)
-	local green = math.clamp(GrassClone.Color.G + offsetColor2, 0, 1)
-	local blue = math.clamp(GrassClone.Color.B + offsetColor2, 0, 1)
-	GrassClone.Color = Color3.new(red, green, blue)
+	module.colorOffsetPart(GrassClone, -12, 12)
 end
 
 
-
+-- Checks if the chunk has a biome type and if doesnt it sets as the default normal grass
 function module.checkEmptyChunk(chunkPart)
 	local hasTag = false
-	for x,y in moduleData.GrassTypes do
+	for x,y in moduleData.GrassTypes do -- Checks if has
 		if chunkPart:HasTag(y) then
 			hasTag = true
 		end
 	end
-	if hasTag == false then
-		module.replaceBlock(chunkPart, ReplicatedStorage.Biomes.NormalGrass)
+	if hasTag == false then -- If false it sets default grass
+		module.replaceChunk(chunkPart, ReplicatedStorage.Biomes.NormalGrass)
 		CollectionService:AddTag(chunkPart, "NormalGrass")
 	end
 end
 
 
-
+-- Deletes the map (ran when player leaves)
 function module.deleteMap(plotFolder)
 	local tableOfPartsFolders = {"ChunkFolder", "RainbowParts", "BuyUIFolder", "SeedDataFolder"}
-
 	for i, v in tableOfPartsFolders do
 		for x, y in plotFolder[v]:GetChildren() do
-			if y:IsA("Highlight") == false then
+			if y:IsA("Highlight") == false then -- Keeps highlight (used for rainbow parts)
 				y:Destroy()
 			end
 		end
 	end
-
 	plotFolder.NumberOfObjects.Value = 0
 end
 
 
-
+-- Buy chunk fuunction for when player buys a chunk.
 function module.buyChunk(coordinateString, userId, player, receiptInfo)
-	if coordinateString then
-		local splitTable = string.split(coordinateString, ",")
-		local coord1 = tonumber(splitTable[1])
-		local coord2 = tonumber(splitTable[2])
-		local plotNumber = tonumber(splitTable[3])
+	local splitTable = string.split(coordinateString, ",")
+	local coord1 = tonumber(splitTable[1])
+	local coord2 = tonumber(splitTable[2])
+	local plotNumber = tonumber(splitTable[3])
 
-		local buyChunkNumber = math.max(coord1, coord2)
-
-		local price
-		if buyChunkNumber > 21 then
-			price  = 250000
-		else
-			price = buyPlotProducts[buyChunkNumber][1]
-		end
-
-
-		--if price == receiptInfo.RobuxSpent then
-		currentChunkRemote:FireClient(player, coordinateString)
-		local biomes = playerData["BiomeSeeds"][userId]
-		local heightSeed = playerData["HeightSeed"][userId][1]
-
-		module.AddChunk(coord1, coord2, plotNumber, heightSeed, importantValues.HeightScale.Value, true, player)
-		--end
-	end
+	currentChunkRemote:FireClient(player, coordinateString) -- Changes the current chunk player is interacting with
+	local biomes = playerData["BiomeSeeds"][userId] -- Gets the biome and height seeds from playerdata
+	local heightSeed = playerData["HeightSeed"][userId][1]
+	module.AddChunk(coord1, coord2, plotNumber, heightSeed, importantValues.HeightScale.Value, true, player) -- Physically adds the hcunk
 end
 
 
-
+-- Sets a random xSize and zSize and takes  the noise value and sets the ySize for height
+-- If the chunk is already saved in player data then it doesnt make a new one just copies it
 function module.setChunkSize(coord1, coord2, plotNumber, seed, scale, userId)
 	local xSize, ySize, zSize, noiseValue
 	local savedSizeTable = chunkSizes[userId][coord1..","..coord2]
-	if savedSizeTable then
+	if savedSizeTable then -- Checks if the chunk already exists in player data and if it does it uses its info
 		xSize = savedSizeTable[1]
 		ySize = savedSizeTable[2]
 		zSize = savedSizeTable[3]
 		noiseValue = savedSizeTable[4]
-
-	else
+	else -- If it doesnt then creases new ones
 		local x, z = RF.coordinateScale(increment, plotNumber, {coord1, coord2})
 		noiseValue = math.noise((x + seed) / (increment/2.5) * scale, (z + seed) / (increment/2.5) * scale)         
 		ySize = (noiseValue + 1 ) * 100
 
 		xSize = increment + RF.getRandomFloat(0, increment)
 		zSize = increment + RF.getRandomFloat(0, increment)
-		chunkSizes[userId][coord1..","..coord2] = {xSize, ySize, zSize, noiseValue}
+		chunkSizes[userId][coord1..","..coord2] = {xSize, ySize, zSize, noiseValue} -- Saves it in player data
 	end
 	return	xSize, ySize, zSize, noiseValue
 end
 
+
+-- Sets the final HP, price, and current HP of the model
 function module.setValueAndHP(model)
-	print(model.Name)
 	local basePrice = moduleData.ObjectPrice[model.Name]
 
+	-- Gets the mutation multipliers
 	local mutationMultiplier = 1
 	for i,v in model:GetTags() do
 		if v ~= "BreakableModel" then
@@ -778,25 +760,30 @@ function module.setValueAndHP(model)
 	local finalPrice = math.floor(basePrice * mutationMultiplier * RF.getRandomFloat(1,2)) * 3
 	local finalHP = math.floor(basePrice* model:GetAttribute("Scale") * RF.getRandomFloat(1,2))
 
+	-- Price
 	local valueObject = Instance.new("NumberValue", model)
 	valueObject.Name = "Price"
 	valueObject.Value = finalPrice
 
+	-- HP
 	local HPObject = Instance.new("NumberValue", model)
 	HPObject.Name = "HP"
 	HPObject.Value = finalHP
 
+	-- CurrentHP
 	local currentHP = Instance.new("NumberValue", model)
 	currentHP.Name = "CurrentHP"
 	currentHP.Value = finalHP
-	
 end
 
 
+-- Given a model it turns it into a tool and puts it in the players backpack (roblox built in stuff)
 function module.breakModel(model, player)
 	local primaryPart = model.PrimaryPart
 	primaryPart.Name = "Handle"
 	local tool = Instance.new("Tool", player.Backpack)
+
+	-- Gets the name and adds any mutation to the name if a mutation exists
 	local name
 	for i,v in CollectionService:GetTags(model) do
 		if moduleData.mutationMultiplier[v] ~= nil then
@@ -807,9 +794,10 @@ function module.breakModel(model, player)
 		end
 	end
 	tool.Name = name
-
 	tool.Grip = CFrame.new(0, 0, primaryPart.Size.Z/2)
 
+	-- Welds everything inside the model together and parents it to the tool then destroys the original model 
+	-- Keeps the price of the model so it can be used when player goes to sell it
 	for i,v in model:GetDescendants() do
 		if v:IsA("Part") then
 			v.Parent = tool
@@ -819,7 +807,7 @@ function module.breakModel(model, player)
 			if v.Name == "Handle" then
 				continue
 			else
-				local weld = Instance.new("WeldConstraint", tool)
+				local we  ld = Instance.new("WeldConstraint", tool)
 				weld.Part0 = tool.Handle
 				weld.Part1 = v
 			end
@@ -831,26 +819,25 @@ function module.breakModel(model, player)
 end
 
 
+-- Weather manager that gets ran every second from handler
+-- Checks if a weather is already running or not, if not then  runs a chance to run each weather then calls those functions
+-- And updates the weather booleam and running values
 function module.runWeatherManager()
 	if weatherRunning.Value == false then
 		if math.random(1, weatherChance.Blood_Moon) == 1 then
 			weatherRunning.Value = true
 			weatherBooleans.Blood_Moon.Value = true
-
 			module.makeBloodMoon(30,40)
-
-
-
-		elseif math.random(1, weatherChance.Silver_Night) == 1 then
-			
+		elseif math.random(1, weatherChance.Silver_Night) == 1 then	
 			weatherRunning.Value = true
 			weatherBooleans.Silver_Night.Value = true
-
 			module.makeSilverNight(math.random(30,40))
-
 		end
 	end
 end
+
+
+
 
 
 

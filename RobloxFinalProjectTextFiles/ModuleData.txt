@@ -70,6 +70,7 @@ module.BiomeChanceData =
 	["DarkDimensionGrass"]  = {.7, 1.5}
 }
 
+-- Density of how many objects per chunk of land of that biome
 module.BiomeObjectDensity = 
 
 {
@@ -102,9 +103,9 @@ module.BerryBiomeChance =
 	["DesertGrass"] = 	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 }
 
-
+-- Number associated to each berry
 module.BerryNumber =
-
+	
 {
 	[1] = 	"Sand",
 	[2] = 	"Yellow",
@@ -128,8 +129,9 @@ module.OreBiomeChance =
 	["DirtGrass"] = 	{1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 
 }
 
+-- Number associated to each ore
 module.OreNumber =
-
+	
 {
 	[1] = 	"Copper",
 	[2] = 	"Iron",
@@ -145,36 +147,36 @@ module.OreNumber =
 }
 
 
-
+-- Developer products id and prices to buy chunks with robux
 module.BuyPlotProducts = 
 {
 	[1] 	= nil,
 	[2] 	= {3292885463, 9},
 	[3] 	= {3292885462, 16},
 	[4] 	= {3292885461, 29},
-	[5] 	= {3292885460, 45},
-	[6] 	= {3292885459, 69},
-	[7] 	= {3292885458, 95},
-	[8] 	= {3292885457, 129},
-	[9]	 	= {3292885456, 175},
-	[10] 	= {3292885455, 245},
-	[11] 	= {3292885453, 350},
-	[12] 	= {3292885452, 575},
-	[13] 	= {3292885451, 750},
-	[14] 	= {3292885448, 1150},
-	[15] 	= {3292885447, 1650},
-	[16] 	= {3292885446, 2450},
-	[17] 	= {3292885445, 3350},
-	[18] 	= {3292885444, 4450},
-	[19]	= {3292885443, 9950},
-	[20] 	= {3292885442, 16500},
-	[21] 	= {3292885440, 22450}
+	[5] 	= {3292885460, 69},
+	[6] 	= {3292885459, 129},
+	[7] 	= {3292885458, 219},
+	[8] 	= {3292885457, 349},
+	[9]	 	= {3292885456, 450},
+	[10] 	= {3292885455, 950},
+	[11] 	= {3292885453, 1650},
+	[12] 	= {3292885452, 2850},
+	[13] 	= {3292885451, 4450},
+	[14] 	= {3292885448, 6969},
+	[15] 	= {3292885447, 9950},
+	[16] 	= {3292885446, 15200},
+	[17] 	= {3292885445, 22450},
+	[18] 	= {3292885444, 35000},
+	[19]	= {3292885443, 72000},
+	[20] 	= {3292885442, 150000},
+	[21] 	= {3292885440, 250000}
 }
 
 
 
 
-
+-- Base price for every object
 module.ObjectPrice =
 {
 	["Normal_Rock"] = 10, 
@@ -221,26 +223,22 @@ module.ObjectPrice =
 	["Diamond_Ore"] = 125
 }
 
-
+-- Mutation multiplier for how much it multiplies the prices by
 module.mutationMultiplier = {
 	["Golden"] = 3,
 	["Rainbow"] = 5,
 	["Blood_Red"] = 7,
 	["Silver_Surge"] = 10,
-
 }
 
+-- Chance for weather to appear (1/number) every second
 module.weatherChance = {
-	["Blood_Moon"] = 450000,
-	["Silver_Night"] = 90000,
-
-
-
-
+	["Blood_Moon"] = 100,
+	["Silver_Night"] = 250,
 }
 
 
-
+-- All the non tweenable lighting properties of lighting objects
 module.properties = {
 	["Atmosphere"] = 		{"Density", "Offset", "Color", "Decay", "Glare", "Haze"},
 	["Sky"] = 				{"MoonAngularSize", "MoonTextureId", "StarCount"},
@@ -250,6 +248,7 @@ module.properties = {
 	["SunRays"] = 			{"Enabled", "Intensity", "Spread"}
 }
 
+-- All the tweenable lighting properties of lighting objects
 module.tweenableProperties = {
 	["Atmosphere"] = {"Density", "Offset", "Color", "Decay", "Glare", "Haze"},
 	["Sky"] = {},
@@ -262,11 +261,92 @@ module.tweenableProperties = {
 
 
 
-
-module.PlayerDataTables = {}
-
 module.PriceCache = {}
 
+module.biomeRules = {
+	NormalGrass = {
+		{ threshold = 900, functionName = "makeRock", arguments = { "Normal", 0, 1 } },
+		{ threshold = 500, functionName = "makeDefaultTree" },
+		{ threshold = 200, functionName = "makeBasicBush" },
+		{ threshold = 150, functionName = "makeOreBlock" },
+		{ threshold = 100, functionName = "makeBerryBush" },
+		{ threshold = 50, functionName = "makePineConeTree" },
+	},
+
+	ForestGrass = {
+		{ threshold = 980, functionName = "makeRock", arguments = { "Normal", -2, 1 } },
+		{ threshold = 600, functionName = "makeDefaultTree" },
+		{ threshold = 430, functionName = "makeBamboo" },
+		{ threshold = 310, functionName = "makeBasicBush" },
+		{ threshold = 280, functionName = "makeBerryBush" },
+	},
+
+	DesertGrass = {
+		{ threshold = 850, functionName = "makeRock", arguments = { "Normal", -3, 1 } },
+		{ threshold = 350, functionName = "makeCactus" },
+		{ threshold = 250, functionName = "makeRock", arguments = { "Flat", -3, function() return math.random(10,20)/20 end } },
+		{ threshold = 150, functionName = "makeBasicBush" },
+		{ threshold = 0, functionName = "makeBerryBush" },
+	},
+
+	StoneyGrass = {
+		{ threshold = 500, functionName = "makeRock", arguments = { "Spikey", 0, 1 } },
+		{ threshold = 400, functionName = "makeRock", arguments = { "Normal", 0, 1 } },
+		{ threshold = 200, functionName = "makeRock", arguments = { "Flat", -3, 1 } },
+	},
+
+	SnowyGrass = {
+		{ threshold = 850, functionName = "makeRock", arguments = { "Normal", -2, 1.5 } },
+		{ threshold = 700, functionName = "makeDefaultTree" },
+		{ threshold = 500, functionName = "makeBasicBush" },
+		{ threshold = 420, functionName = "makeBerryBush" },
+	},
+
+	DirtGrass = {
+		{ threshold = 600, functionName = "makeRock", arguments = { "Normal", -2, 1 } },
+		{ threshold = 100, functionName = "makeDeadTree" },
+		{ threshold = 0, functionName = "makeOreBlock" },
+	},
+
+	AutumnGrass = {
+		{ threshold = 930, functionName = "makeRock", arguments = { "Normal", -2, 1 } },
+		{ threshold = 700, functionName = "makeDefaultTree" },
+		{ threshold = 500, functionName = "makeBasicBush" },
+		{ threshold = 420, functionName = "makeBerryBush" },
+		{ threshold = 200, functionName = "makeSavanahTree" },
+	},
+
+	FairyGrass = {
+		{ threshold = 950, functionName = "makeRock", arguments = { "Normal", -2, 1 } },
+		{ threshold = 700, functionName = "makeDefaultTree" },
+		{ threshold = 500, functionName = "makeBasicBush" },
+		{ threshold = 420, functionName = "makeBerryBush" },
+	},
+
+	TwilightGrass = {
+		{ threshold = 950, functionName = "makeRock", arguments = { "Normal", -3, 1 } },
+		{ threshold = 700, functionName = "makeDefaultTree" },
+		{ threshold = 500, functionName = "makeBasicBush" },
+		{ threshold = 420, functionName = "makeBerryBush" },
+	},
+
+	CrimsonGrass = {
+		{ threshold = 950, functionName = "makeRock", arguments = { "Normal", -3, 1 } },
+		{ threshold = 700, functionName = "makeDefaultTree" },
+		{ threshold = 500, functionName = "makeBasicBush" },
+		{ threshold = 420, functionName = "makeBerryBush" },
+	},
+
+	HolyGrass = {
+		{ threshold = 970, functionName = "makeRock", arguments = { "Normal", -4, 1 } },
+		{ threshold = 700, functionName = "makeDefaultTree" },
+	},
+
+	DarkDimensionGrass = {
+		{ threshold = 900, functionName = "makeRock", arguments = { "Normal", -4, 1 } },
+		{ threshold = 600, functionName = "makeDefaultTree" },
+	},
+}
 
 
 
